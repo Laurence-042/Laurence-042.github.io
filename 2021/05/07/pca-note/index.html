@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  
+  <title>PCA主成分分析降维的理解 | Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="西瓜书的说明数据$x_i$原始维度为d（d*1的矩阵），需要使其降维到d’维的$z_i$。如果当一系列样本点$X&#x3D;(x_1,x_2,…,x_m)$（显然$X$为一个d*m的矩阵）距离要降维到的超平面足够近（符合降维需求），并使X中每个样本降维后足够分散（否则降维就没有什么意义了）。为了方便讨论，不妨使$X$已中心化，即$\sum_ix_i&#x3D;0$。 所以我们需要找到一个合适的d*d的变换矩阵$W&#x3D;(">
+<meta property="og:type" content="article">
+<meta property="og:title" content="PCA主成分分析降维的理解">
+<meta property="og:url" content="http://example.com/2021/05/07/pca-note/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="西瓜书的说明数据$x_i$原始维度为d（d*1的矩阵），需要使其降维到d’维的$z_i$。如果当一系列样本点$X&#x3D;(x_1,x_2,…,x_m)$（显然$X$为一个d*m的矩阵）距离要降维到的超平面足够近（符合降维需求），并使X中每个样本降维后足够分散（否则降维就没有什么意义了）。为了方便讨论，不妨使$X$已中心化，即$\sum_ix_i&#x3D;0$。 所以我们需要找到一个合适的d*d的变换矩阵$W&#x3D;(">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2021-05-07T13:27:08.085Z">
+<meta property="article:modified_time" content="2020-08-10T15:27:53.742Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="机器学习">
+<meta property="article:tag" content="个人笔记">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="shortcut icon" href="/favicon.png">
+  
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/typeface-source-code-pro@0.0.71/index.min.css">
+
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+    
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.min.css">
+
+  
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://example.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-pca-note" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2021/05/07/pca-note/" class="article-date">
+  <time class="dt-published" datetime="2021-05-07T13:27:08.085Z" itemprop="datePublished">2021-05-07</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="p-name article-title" itemprop="headline name">
+      PCA主成分分析降维的理解
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h3 id="西瓜书的说明"><a href="#西瓜书的说明" class="headerlink" title="西瓜书的说明"></a>西瓜书的说明</h3><p>数据$x_i$原始维度为d（d*1的矩阵），需要使其降维到d’维的$z_i$。如果当一系列样本点$X=(x_1,x_2,…,x_m)$（显然$X$为一个d*m的矩阵）距离要降维到的超平面足够近（符合降维需求），并使X中每个样本降维后足够分散（否则降维就没有什么意义了）。为了方便讨论，不妨使$X$已中心化，即$\sum_ix_i=0$。</p>
+<p>所以我们需要找到一个合适的d*d的变换矩阵$W=(w_1,w_2,…,w_d)$对样本点进行坐标系变换，使其映射到d维空间（同等维度），$w_i$为标准正交基向量，即$w_i^Tw_i=1$（显然$W^TW=I_d$）且当$i\neq j$时$w_i^Tw_j=0$。将$x_i$被变换到这个新坐标系后得到一个在新的坐标系下的的d维数据$y_i=(y_{i1};y_{i2};…;y_{id})$，$y_{ij}=w_j^Tx_i$，$y_i=W^Tx_i$。</p>
+<p>若丢弃$y_i$其中的一些维度。可以得到$z_i=(z_{i1};z_{i2};…;z_{id‘})$，$z_i=W^Tx_i$<strong>（此处的$W=(w_1,w_2,…,w_d’)$是上面的d*d矩阵$W$去除相应维度得到的d*d’矩阵，之后的$W$以d*d’维度的为准）</strong>，$d’&lt;d$，则基于投影重构的n维新样本点为$\hat{x_i}=\sum_{j=1}^{d’}z_{ij}w_j=Wz_i$。</p>
+<h3 id="或者可以更简练地说"><a href="#或者可以更简练地说" class="headerlink" title="或者可以更简练地说"></a>或者可以更简练地说</h3><p>找到一个合适的d*d’的变换矩阵$W=(w_1,w_2,…,w_{d’})$对样本点进行降维映射（或者说投影），使原始维度为d的数据$x_i$映射为d’维的$z_i$。和上面一样，也可以得到</p>
+<p>$$<br>w_i^Tw_i=1\<br>W^TW=I_{d’}\<br>w_i^Tw_j=0,i\neq j\<br>z_i=W^Tx_i\<br>\hat{x_i}=\sum_{j=1}^{d’}z_{ij}w_j=Wz_i<br>$$</p>
+<h3 id="举个降维投影的例子"><a href="#举个降维投影的例子" class="headerlink" title="举个降维投影的例子"></a>举个降维投影的例子</h3><p>举个从二维空间投影到一维空间的例子。比如有个代表$(0,1)$的2*1的二维列向量<br>$$<br>x=\left[ \begin{array}{cc}<br>0\<br>1<br>\end{array}<br>\right ]<br>$$<br>要将它投影到一个在二维的超平面（也就是一条直线）上成为一个一维数据。假设超平面的向量为$(\frac{\sqrt 3}{2},\frac{1}{2})$，也就是一个与x轴正方向成$30^\circ$的直线，那么投影矩阵即为超平面的列向量表示<br>$$<br>W=\left[ \begin{array}{cc}<br>\frac{\sqrt 3}{2}\<br>\frac{1}{2}<br>\end{array}<br>\right ]<br>$$<br>投影后得到的一维向量为<br>$$<br>z=W^Tx=\left[ \begin{array}{cc}<br>\frac{\sqrt 3}{2}, \frac{1}{2}<br>\end{array}<br>\right ]<br>\left[ \begin{array}{cc}<br>0\<br>1<br>\end{array}<br>\right ]<br>=[\frac{1}{2}]<br>$$<br>映射回二维空间<br>$$<br>\hat{x}=Wz=<br>\left[ \begin{array}{cc}<br>\frac{\sqrt 3}{2}\<br>\frac{1}{2}<br>\end{array}<br>\right ]<br>[\frac{1}{2}]<br>=<br>\left[ \begin{array}{cc}<br>\frac{\sqrt 3}{4}\<br>\frac{1}{4}<br>\end{array}<br>\right ]<br>$$<br>直观上可以理解为，通过$(0,1)$（也就是$x$)向一个途径$(0,0)$与$(\frac{\sqrt 3}{2},\frac{1}{2})$（也就是$W$）的直线做垂线，从$(0,0)$到垂足的距离为$\frac{1}{2}$（也就是$z$），垂足坐标为$(\frac{\sqrt 3}{4},\frac{1}{4})$（也就是$\hat{x}$）</p>
+<h3 id="开始推导"><a href="#开始推导" class="headerlink" title="开始推导"></a>开始推导</h3><p>由于样本点距离要降维到的超平面足够近，也就是说原样本点$x_i$和重构后的样本点$\hat{x_i}$之间的距离应尽可能小。换句话说，也就是要最小化所有样本的总距离差$\sum_{i=1}^{m}||\hat{x_i}-x_i||<em>2$，即最小化$\sum</em>{i=1}^{m}\left|WW^Tx_i-x_i\right|<em>2$，即最小化<br>$$<br>\sum</em>{i=1}^{m}\left|\sum_{j=1}^{d’}z_{ij}w_j-x_i\right|_2<br>$$</p>
+<p>推导部分由于忘记了大量包括但不限于如何处理转置的矩阵乘法展开之类的线代知识，只能看着<a target="_blank" rel="noopener" href="https://datawhalechina.github.io/pumpkin-book/#/chapter10/chapter10?id=_1014">南瓜书上对10.14式的推导</a>一边惊叹一边无地自容……总之可推出上式等于<br>$$<br>-\sum_{i=1}^{m}z_i^Tz_i+\sum_{i=1}^{m}x_i^Tx_i<br>$$<br>其中$\sum_{i=1}^{m}x_i^Tx_i$为一个常数（取决于样本集而非模型），所以上式可写为<br>$$<br>const-\sum_{i=1}^{m}z_i^Tz_i<br>$$<br>将$z_i=W^Tx_i$代入可化为<br>$$<br>const-\left(W^T\left(\sum_{i=1}^{m}x_ix_i^T\right)W\right)^T<br>$$<br>所以目标为最小化</p>
+<p>$$<br>-\left(W^T\left(\sum_{i=1}^{m}x_ix_i^T\right)W\right)^T\<br>s.t. W^TW=I<br>$$</p>
+<p>设<br>$$<br>f(W)=-\left(W^T\left(\sum_{i=1}^{m}x_ix_i^T\right)W\right)^T\<br>g(W)=(W^TW-I)^T<br>$$</p>
+<p>使用拉格朗日乘子法，若要使$f(x)$最小同时满足$g(x)=0$，取$d’*d’$对角矩阵$\Lambda$定义拉格朗日函数<br>$$<br>L(W,\Lambda)=f(W)+g(W)\Lambda<br>$$<br>即<br>$$<br>L(W,\Lambda)=-\left(W^T\left(\sum_{i=1}^{m}x_ix_i^T\right)W\right)^T+\left(\Lambda^T(W^TW-I)\right)^T<br>$$</p>
+<p>令对$W$求微分结果为0，利用矩阵微分公式$\frac{\partial}{\partial X}(X^TBX)^T=BX+B^TX$与$\frac{\partial}{\partial X}(BX^TX)^T=XB^T+XB$可得到<br>$$<br>\frac{\partial L}{\partial W}=-2(XX^TW)+W\Lambda^T+W\Lambda=-2(XX^TW)+2W\Lambda=0<br>$$</p>
+<p>即<br>$$<br>XX^TW=W\Lambda<br>$$<br>展开即得<br>$$<br>XX^Tw_i=\lambda_i w_i<br>$$<br> 此式为矩阵特征值和特征向量的定义式，其中$\lambda_i,w_i$分别表示矩阵$XX^T$的特征值和单位特征向量 。取前d’大的特征值对应的单位特征向量即可得到$W$</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2021/05/07/pca-note/" data-id="ckoed6n0t00054ot65chr067a" data-title="PCA主成分分析降维的理解" class="article-share-link">Share</a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E4%B8%AA%E4%BA%BA%E7%AC%94%E8%AE%B0/" rel="tag">个人笔记</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/" rel="tag">机器学习</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2021/05/07/lsb-watermark/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">给一个图片加上肉眼难以发现的LSB水印</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E4%B8%AA%E4%BA%BA%E7%AC%94%E8%AE%B0/" rel="tag">个人笔记</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%A8%B1%E4%B9%90%E9%A1%B9%E7%9B%AE/" rel="tag">娱乐项目</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/" rel="tag">机器学习</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/%E4%B8%AA%E4%BA%BA%E7%AC%94%E8%AE%B0/" style="font-size: 10px;">个人笔记</a> <a href="/tags/%E5%A8%B1%E4%B9%90%E9%A1%B9%E7%9B%AE/" style="font-size: 20px;">娱乐项目</a> <a href="/tags/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/" style="font-size: 10px;">机器学习</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/05/">May 2021</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2021/05/07/pca-note/">PCA主成分分析降维的理解</a>
+          </li>
+        
+          <li>
+            <a href="/2021/05/07/lsb-watermark/">给一个图片加上肉眼难以发现的LSB水印</a>
+          </li>
+        
+          <li>
+            <a href="/2021/05/07/hello-world/">Hello World</a>
+          </li>
+        
+          <li>
+            <a href="/2021/05/07/color-change-image/">把一个jpg变成png，让它的部分元素可以随背景改变颜色</a>
+          </li>
+        
+          <li>
+            <a href="/2021/05/07/bytes-to-wav/">给文件加个wav头，让它看起来像是个全是杂音的音频文件？</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      
+      &copy; 2021 John Doe<br>
+      Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+
+<script src="/js/jquery-3.4.1.min.js"></script>
+
+
+
+  
+<script src="/fancybox/jquery.fancybox.min.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+
+  </div>
+</body>
+</html>
