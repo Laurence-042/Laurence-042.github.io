@@ -1,12 +1,7 @@
-# 用于构建和部署Hugo网站到GitHub Pages的示例工作流程
+# 用于构建和部署Hugo网站到GitHub Pages的示例工作流程。deploy-projects.yaml包含这个部分
 name: 发布Hugo网站到Pages
 
 on:
-  # 在目标为默认分支的推送上运行
-  push:
-    branches:
-      - main
-
   # 允许您手动从"Actions"标签运行此工作流程
   workflow_dispatch:
 

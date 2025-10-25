@@ -2,16 +2,22 @@
 name: 部署项目Demo
 
 on:
-  workflow_dispatch:
-    inputs:
-      projects:
-        description: '要部署的项目列表 (JSON格式)'
-        required: true
-        default: '["my-pen-is-broken"]'
-        type: string
-  schedule:
-    # 每天UTC 02:00 (北京时间10:00) 自动检查更新
-    - cron: '0 2 * * *'
+  # 在目标为默认分支的推送上运行
+  push:
+    branches:
+      - main
+  
+  # # 允许您手动从"Actions"标签运行此工作流程
+  # workflow_dispatch:
+  #   inputs:
+  #     projects:
+  #       description: '要部署的项目列表 (JSON格式)'
+  #       required: true
+  #       default: '["my-pen-is-broken"]'
+  #       type: string
+  # schedule:
+  #   # 每天UTC 02:00 (北京时间10:00) 自动检查更新
+  #   - cron: '0 2 * * *'
 
 permissions:
   contents: read
