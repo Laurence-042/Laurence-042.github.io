@@ -49,7 +49,13 @@ jobs:
             PROJECTS='${{ github.event.inputs.projects }}'
           fi
           
+          echo "=== 调试信息 ==="
+          echo "触发方式: ${{ github.event_name }}"
+          echo "输入的项目列表: ${{ github.event.inputs.projects }}"
           echo "需要部署的项目: $PROJECTS"
+          echo "JSON验证: $(echo $PROJECTS | jq .)"
+          echo "==============="
+          
           echo "projects=$PROJECTS" >> $GITHUB_OUTPUT
 
   # 构建项目Demo
@@ -72,6 +78,28 @@ jobs:
           repository: Laurence-042/${{ matrix.project }}
           path: projects/${{ matrix.project }}
           
+      - name: 调试项目仓库内容
+        working-directory: projects/${{ matrix.project }}
+        run: |
+          echo "=== 项目 ${{ matrix.project }} 调试信息 ==="
+          echo "当前目录: $(pwd)"
+          echo "目录内容:"
+          ls -la
+          echo ""
+          echo "package.json 检查:"
+          if [ -f package.json ]; then
+            echo "✓ package.json 存在"
+            echo "Scripts:"
+            cat package.json | jq '.scripts // {}'
+          else
+            echo "✗ package.json 不存在"
+          fi
+          echo ""
+          echo "HTML文件检查:"
+          find . -name "*.html" -type f | head -10
+          echo ""
+          echo "=================================="
+          
       - name: 设置 Node.js
         uses: actions/setup-node@v4
         with:
@@ -91,34 +119,79 @@ jobs:
       - name: 构建项目 ${{ matrix.project }}
         working-directory: projects/${{ matrix.project }}
         run: |
+          echo "=== 开始构建项目 ${{ matrix.project }} ==="
           # 检查不同的构建命令
-          if npm run | grep -q "build:all"; then
-            npm run build:all
-          elif npm run | grep -q "build"; then
-            npm run build
+          if [ -f package.json ]; then
+            echo "检查可用的npm scripts:"
+            npm run 2>&1 | grep -E "^[[:space:]]*[a-zA-Z]" || true
+            echo ""
+            
+            if npm run | grep -q "build:all"; then
+              echo "执行: npm run build:all"
+              npm run build:all
+            elif npm run | grep -q "build"; then
+              echo "执行: npm run build"
+              npm run build
+            else
+              echo "警告: 未找到build脚本"
+            fi
           else
-            echo "No build script found, checking for static files"
+            echo "没有package.json文件，跳过npm构建"
           fi
+          
+          echo ""
+          echo "构建后的目录结构:"
+          find . -type d -name "dist" -o -name "build" -o -name "public" | while read dir; do
+            echo "目录: $dir"
+            ls -la "$dir" | head -10
+            echo ""
+          done
+          echo "========================="
           
       - name: 准备Demo文件
         run: |
+          echo "=== 准备Demo文件 ${{ matrix.project }} ==="
           mkdir -p demo-output/project/${{ matrix.project }}/demo
           
           # 复制构建后的文件
+          echo "查找构建目录..."
           if [ -d "projects/${{ matrix.project }}/dist" ]; then
+            echo "✓ 找到 dist 目录，复制文件..."
             cp -r projects/${{ matrix.project }}/dist/* demo-output/project/${{ matrix.project }}/demo/
+            echo "已复制 dist 目录内容"
           elif [ -d "projects/${{ matrix.project }}/build" ]; then
+            echo "✓ 找到 build 目录，复制文件..."
             cp -r projects/${{ matrix.project }}/build/* demo-output/project/${{ matrix.project }}/demo/
+            echo "已复制 build 目录内容"
           elif [ -d "projects/${{ matrix.project }}/public" ]; then
+            echo "✓ 找到 public 目录，复制文件..."
             cp -r projects/${{ matrix.project }}/public/* demo-output/project/${{ matrix.project }}/demo/
+            echo "已复制 public 目录内容"
           else
             # 如果没有找到构建目录，复制源文件
-            echo "No build directory found, copying source files"
-            cp -r projects/${{ matrix.project }}/src/* demo-output/project/${{ matrix.project }}/demo/ 2>/dev/null || true
-            cp projects/${{ matrix.project }}/*.html demo-output/project/${{ matrix.project }}/demo/ 2>/dev/null || true
-            cp projects/${{ matrix.project }}/*.js demo-output/project/${{ matrix.project }}/demo/ 2>/dev/null || true
-            cp projects/${{ matrix.project }}/*.css demo-output/project/${{ matrix.project }}/demo/ 2>/dev/null || true
+            echo "⚠️ 未找到构建目录，复制源文件..."
+            
+            # 复制HTML文件
+            find projects/${{ matrix.project }} -name "*.html" -not -path "*/node_modules/*" -exec cp {} demo-output/project/${{ matrix.project }}/demo/ \; 2>/dev/null || true
+            
+            # 复制JS文件
+            find projects/${{ matrix.project }} -name "*.js" -not -path "*/node_modules/*" -exec cp {} demo-output/project/${{ matrix.project }}/demo/ \; 2>/dev/null || true
+            
+            # 复制CSS文件
+            find projects/${{ matrix.project }} -name "*.css" -not -path "*/node_modules/*" -exec cp {} demo-output/project/${{ matrix.project }}/demo/ \; 2>/dev/null || true
+            
+            # 如果有src目录，复制src内容
+            if [ -d "projects/${{ matrix.project }}/src" ]; then
+              cp -r projects/${{ matrix.project }}/src/* demo-output/project/${{ matrix.project }}/demo/ 2>/dev/null || true
+            fi
+            
+            echo "已复制源文件"
           fi
+          
+          echo ""
+          echo "Demo目录最终内容:"
+          ls -la demo-output/project/${{ matrix.project }}/demo/
+          echo ""
           
           # 创建项目介绍页面
           cat > demo-output/project/${{ matrix.project }}/demo/README.md << 'EOF'
@@ -143,6 +216,51 @@ jobs:
           
           请访问项目源码仓库查看详细的使用说明和文档。
           EOF
+          
+          # 创建一个简单的index.html（如果不存在的话）
+          if [ ! -f "demo-output/project/${{ matrix.project }}/demo/index.html" ]; then
+            echo "创建默认的index.html..."
+            cat > demo-output/project/${{ matrix.project }}/demo/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html lang="zh-CN">
+          <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>${{ matrix.project }} Demo</title>
+              <style>
+                  body { font-family: Arial, sans-serif; margin: 40px; }
+                  .demo-container { max-width: 800px; margin: 0 auto; }
+                  .file-list { margin: 20px 0; }
+                  .file-list a { display: block; margin: 5px 0; padding: 10px; background: #f5f5f5; text-decoration: none; border-radius: 5px; }
+                  .file-list a:hover { background: #e0e0e0; }
+              </style>
+          </head>
+          <body>
+              <div class="demo-container">
+                  <h1>${{ matrix.project }} Demo</h1>
+                  <p>这是 <a href="https://github.com/Laurence-042/${{ matrix.project }}" target="_blank">${{ matrix.project }}</a> 项目的在线演示。</p>
+                  
+                  <div class="file-list">
+                      <h3>可用文件:</h3>
+          EOF
+            
+            # 添加所有HTML文件链接
+            find demo-output/project/${{ matrix.project }}/demo/ -name "*.html" -not -name "index.html" | while read file; do
+              filename=$(basename "$file")
+              echo "            <a href=\"./$filename\">$filename</a>" >> demo-output/project/${{ matrix.project }}/demo/index.html
+            done
+            
+            cat >> demo-output/project/${{ matrix.project }}/demo/index.html << 'EOF'
+                  </div>
+                  
+                  <p><a href="https://github.com/Laurence-042/${{ matrix.project }}" target="_blank">查看源码</a></p>
+              </div>
+          </body>
+          </html>
+          EOF
+          fi
+          
+          echo "=== Demo文件准备完成 ==="
           
       - name: 上传Demo构建产物
         uses: actions/upload-artifact@v4
@@ -171,12 +289,23 @@ jobs:
           
       - name: 整合Demo到Hugo网站
         run: |
+          echo "=== 整合Demo到Hugo网站 ==="
           # 创建projects内容目录
           mkdir -p content/project
           
           # 移动demo文件到Hugo的static目录
           if [ -d "demos/project" ]; then
+            echo "✓ 找到demos/project目录"
+            mkdir -p static
             cp -r demos/project static/
+            echo "已将demo文件复制到static/project/"
+            
+            echo "Static目录结构:"
+            find static/project -type f | head -20
+          else
+            echo "⚠️ 未找到demos/project目录"
+            echo "可用的demo目录:"
+            find demos -type d | head -10
           fi
           
           # 创建项目索引页面
@@ -196,11 +325,16 @@ jobs:
           EOF
           
           # 为每个项目创建介绍页面
+          echo "创建项目页面..."
           for project in ${{ join(fromJson(needs.check-updates.outputs.projects-to-deploy), ' ') }}; do
+            echo "处理项目: $project"
+            
             if [ -f "static/project/$project/demo/README.md" ]; then
+              echo "✓ 使用项目的README.md"
               # 使用项目的README作为内容
               cp "static/project/$project/demo/README.md" "content/project/$project.md"
             else
+              echo "✓ 创建基本项目页面"
               # 创建基本的项目页面
               cat > "content/project/$project.md" << EOF
           ---
@@ -221,6 +355,12 @@ jobs:
             echo "- [$project](/project/$project/) - [在线演示](/project/$project/demo/)" >> content/project/_index.md
           done
           
+          echo ""
+          echo "Content目录结构:"
+          find content -type f
+          echo ""
+          echo "==========================="
+          
       - name: 安装Hugo CLI
         run: |
           HUGO_VERSION=0.128.0
@@ -239,10 +379,35 @@ jobs:
           HUGO_ENVIRONMENT: production
           HUGO_ENV: production
         run: |
+          echo "=== Hugo构建过程 ==="
+          echo "Hugo版本:"
+          hugo version
+          echo ""
+          
+          echo "构建前的目录结构:"
+          echo "Content目录:"
+          find content -type f | head -20
+          echo ""
+          echo "Static目录:"
+          find static -type f | head -20
+          echo ""
+          
+          echo "开始Hugo构建..."
           hugo \
             --gc \
             --minify \
-            --baseURL "${{ steps.pages.outputs.base_url }}/"
+            --baseURL "${{ steps.pages.outputs.base_url }}/" \
+            --verbose
+            
+          echo ""
+          echo "构建后的public目录:"
+          find public -type f | head -30
+          echo ""
+          
+          echo "检查项目demo文件是否存在:"
+          find public -path "*/project/*/demo/*" -type f | head -10
+          echo ""
+          echo "====================="
             
       - name: 上传构建产物
         uses: actions/upload-pages-artifact@v3
@@ -257,3 +422,18 @@ jobs:
       - name: 部署到GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+        
+      - name: 部署后验证
+        run: |
+          echo "=== 部署结果验证 ==="
+          echo "部署URL: ${{ steps.deployment.outputs.page_url }}"
+          echo "预期项目演示URL:"
+          for project in ${{ join(fromJson(needs.check-updates.outputs.projects-to-deploy), ' ') }}; do
+            echo "  - ${{ steps.deployment.outputs.page_url }}project/$project/demo/"
+          done
+          echo ""
+          echo "可以通过以下链接访问："
+          echo "1. 项目列表: ${{ steps.deployment.outputs.page_url }}project/"
+          echo "2. 具体项目: ${{ steps.deployment.outputs.page_url }}project/my-pen-is-broken/"
+          echo "3. 项目演示: ${{ steps.deployment.outputs.page_url }}project/my-pen-is-broken/demo/"
+          echo "=========================="

@@ -3,6 +3,9 @@ languageCode = 'en-us'
 title = 'My New Hugo Site'
 theme = 'ananke'
 
+# 静态文件目录配置
+staticDir = ['static']
+
 # 导航菜单配置
 [menu]
   [[menu.main]]
