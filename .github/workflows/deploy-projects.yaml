@@ -422,18 +422,3 @@ jobs:
       - name: 部署到GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-        
-      - name: 部署后验证
-        run: |
-          echo "=== 部署结果验证 ==="
-          echo "部署URL: ${{ steps.deployment.outputs.page_url }}"
-          echo "预期项目演示URL:"
-          for project in ${{ join(fromJson(needs.check-updates.outputs.projects-to-deploy), ' ') }}; do
-            echo "  - ${{ steps.deployment.outputs.page_url }}project/$project/demo/"
-          done
-          echo ""
-          echo "可以通过以下链接访问："
-          echo "1. 项目列表: ${{ steps.deployment.outputs.page_url }}project/"
-          echo "2. 具体项目: ${{ steps.deployment.outputs.page_url }}project/my-pen-is-broken/"
-          echo "3. 项目演示: ${{ steps.deployment.outputs.page_url }}project/my-pen-is-broken/demo/"
-          echo "=========================="
