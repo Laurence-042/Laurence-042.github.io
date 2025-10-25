@@ -1,0 +1,38 @@
+# 项目配置文件
+# 定义需要部署的项目及其配置
+
+projects:
+  my-pen-is-broken:
+    name: "言阅姬 (YanYueJi)"
+    description: "Steam好评率98%，全球首款「寻找对话中敏感词」的游戏工具"
+    repository: "Laurence-042/my-pen-is-broken"
+    demo_path: "/project/my-pen-is-broken/demo/"
+    build_command: "build:all"  # 或者 build, build:bookmarklets 等
+    build_dir: "dist"  # 构建输出目录
+    main_file: "bookmarks.html"  # 主要演示文件
+    tech_stack:
+      - "JavaScript"
+      - "Webpack"
+      - "Pinyin"
+      - "DOM Manipulation"
+    features:
+      - "敏感词检测"
+      - "拼音匹配"
+      - "浏览器书签工具"
+    
+  # 未来可以添加更多项目
+  # another-project:
+  #   name: "另一个项目"
+  #   description: "项目描述"
+  #   repository: "Laurence-042/another-project"
+  #   demo_path: "/project/another-project/demo/"
+  #   build_command: "build"
+  #   build_dir: "dist"
+  #   main_file: "index.html"
+
+# 全局配置
+global:
+  base_url: "https://Laurence-042.github.io"
+  projects_base_path: "/project"
+  auto_update: true
+  update_schedule: "0 2 * * *"  # 每天UTC 02:00检查更新

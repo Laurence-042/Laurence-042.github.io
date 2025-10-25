@@ -1,0 +1,262 @@
+# 多项目Demo部署工作流
+name: 部署项目Demo
+
+on:
+  workflow_dispatch:
+    inputs:
+      projects:
+        description: '要部署的项目列表 (JSON格式)'
+        required: true
+        default: '["my-pen-is-broken"]'
+        type: string
+  schedule:
+    # 每天UTC 02:00 (北京时间10:00) 自动检查更新
+    - cron: '0 2 * * *'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "projects-deployment"
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  # 检测项目更新
+  check-updates:
+    runs-on: ubuntu-latest
+    outputs:
+      projects-to-deploy: ${{ steps.check.outputs.projects }}
+    steps:
+      - name: 检出主仓库
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: 检查项目更新
+        id: check
+        run: |
+          # 默认项目列表
+          PROJECTS='["my-pen-is-broken"]'
+          
+          # 如果是手动触发，使用输入的项目列表
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            PROJECTS='${{ github.event.inputs.projects }}'
+          fi
+          
+          echo "需要部署的项目: $PROJECTS"
+          echo "projects=$PROJECTS" >> $GITHUB_OUTPUT
+
+  # 构建项目Demo
+  build-projects:
+    runs-on: ubuntu-latest
+    needs: check-updates
+    strategy:
+      matrix:
+        project: ${{ fromJson(needs.check-updates.outputs.projects-to-deploy) }}
+      fail-fast: false
+    steps:
+      - name: 检出主仓库
+        uses: actions/checkout@v4
+        with:
+          path: main-repo
+          
+      - name: 检出项目仓库 ${{ matrix.project }}
+        uses: actions/checkout@v4
+        with:
+          repository: Laurence-042/${{ matrix.project }}
+          path: projects/${{ matrix.project }}
+          
+      - name: 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: projects/${{ matrix.project }}/package.json
+          
+      - name: 安装依赖
+        working-directory: projects/${{ matrix.project }}
+        run: |
+          if [ -f package.json ]; then
+            npm ci
+          else
+            echo "No package.json found, skipping npm install"
+          fi
+          
+      - name: 构建项目 ${{ matrix.project }}
+        working-directory: projects/${{ matrix.project }}
+        run: |
+          # 检查不同的构建命令
+          if npm run | grep -q "build:all"; then
+            npm run build:all
+          elif npm run | grep -q "build"; then
+            npm run build
+          else
+            echo "No build script found, checking for static files"
+          fi
+          
+      - name: 准备Demo文件
+        run: |
+          mkdir -p demo-output/project/${{ matrix.project }}/demo
+          
+          # 复制构建后的文件
+          if [ -d "projects/${{ matrix.project }}/dist" ]; then
+            cp -r projects/${{ matrix.project }}/dist/* demo-output/project/${{ matrix.project }}/demo/
+          elif [ -d "projects/${{ matrix.project }}/build" ]; then
+            cp -r projects/${{ matrix.project }}/build/* demo-output/project/${{ matrix.project }}/demo/
+          elif [ -d "projects/${{ matrix.project }}/public" ]; then
+            cp -r projects/${{ matrix.project }}/public/* demo-output/project/${{ matrix.project }}/demo/
+          else
+            # 如果没有找到构建目录，复制源文件
+            echo "No build directory found, copying source files"
+            cp -r projects/${{ matrix.project }}/src/* demo-output/project/${{ matrix.project }}/demo/ 2>/dev/null || true
+            cp projects/${{ matrix.project }}/*.html demo-output/project/${{ matrix.project }}/demo/ 2>/dev/null || true
+            cp projects/${{ matrix.project }}/*.js demo-output/project/${{ matrix.project }}/demo/ 2>/dev/null || true
+            cp projects/${{ matrix.project }}/*.css demo-output/project/${{ matrix.project }}/demo/ 2>/dev/null || true
+          fi
+          
+          # 创建项目介绍页面
+          cat > demo-output/project/${{ matrix.project }}/demo/README.md << 'EOF'
+          ---
+          title: "${{ matrix.project }} Demo"
+          date: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          draft: false
+          layout: "single"
+          ---
+          
+          # ${{ matrix.project }} Demo
+          
+          这是 [${{ matrix.project }}](https://github.com/Laurence-042/${{ matrix.project }}) 项目的在线演示。
+          
+          ## 项目信息
+          
+          - **源码仓库**: https://github.com/Laurence-042/${{ matrix.project }}
+          - **最后更新**: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          - **演示地址**: https://Laurence-042.github.io/project/${{ matrix.project }}/demo/
+          
+          ## 使用说明
+          
+          请访问项目源码仓库查看详细的使用说明和文档。
+          EOF
+          
+      - name: 上传Demo构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: demo-${{ matrix.project }}
+          path: demo-output/
+          retention-days: 1
+
+  # 部署到Hugo网站
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [check-updates, build-projects]
+    steps:
+      - name: 检出主仓库
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+          
+      - name: 下载所有Demo构建产物
+        uses: actions/download-artifact@v4
+        with:
+          pattern: demo-*
+          path: demos
+          merge-multiple: true
+          
+      - name: 整合Demo到Hugo网站
+        run: |
+          # 创建projects内容目录
+          mkdir -p content/project
+          
+          # 移动demo文件到Hugo的static目录
+          if [ -d "demos/project" ]; then
+            cp -r demos/project static/
+          fi
+          
+          # 创建项目索引页面
+          cat > content/project/_index.md << 'EOF'
+          ---
+          title: "项目演示"
+          date: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          draft: false
+          ---
+          
+          # 项目演示集合
+          
+          这里收集了我的各个项目的在线演示。
+          
+          ## 可用项目
+          
+          EOF
+          
+          # 为每个项目创建介绍页面
+          for project in ${{ join(fromJson(needs.check-updates.outputs.projects-to-deploy), ' ') }}; do
+            if [ -f "static/project/$project/demo/README.md" ]; then
+              # 使用项目的README作为内容
+              cp "static/project/$project/demo/README.md" "content/project/$project.md"
+            else
+              # 创建基本的项目页面
+              cat > "content/project/$project.md" << EOF
+          ---
+          title: "$project"
+          date: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          draft: false
+          ---
+          
+          # $project
+          
+          [$project 在线演示](/project/$project/demo/)
+          
+          [查看源码](https://github.com/Laurence-042/$project)
+          EOF
+            fi
+            
+            # 添加到索引页面
+            echo "- [$project](/project/$project/) - [在线演示](/project/$project/demo/)" >> content/project/_index.md
+          done
+          
+      - name: 安装Hugo CLI
+        run: |
+          HUGO_VERSION=0.128.0
+          wget -O /tmp/hugo.deb https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_linux-amd64.deb
+          sudo dpkg -i /tmp/hugo.deb
+          
+      - name: 安装Dart Sass
+        run: sudo snap install dart-sass
+        
+      - name: 设置Pages
+        id: pages
+        uses: actions/configure-pages@v4
+        
+      - name: 使用Hugo构建
+        env:
+          HUGO_ENVIRONMENT: production
+          HUGO_ENV: production
+        run: |
+          hugo \
+            --gc \
+            --minify \
+            --baseURL "${{ steps.pages.outputs.base_url }}/"
+            
+      - name: 上传构建产物
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./public
+
+  # 部署到GitHub Pages
+  deploy-pages:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: deploy
+    steps:
+      - name: 部署到GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

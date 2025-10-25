@@ -2,3 +2,33 @@ baseURL = 'https://Laurence-042.github.io/'
 languageCode = 'en-us'
 title = 'My New Hugo Site'
 theme = 'ananke'
+
+# 导航菜单配置
+[menu]
+  [[menu.main]]
+    name = "首页"
+    url = "/"
+    weight = 10
+  
+  [[menu.main]]
+    name = "文章"
+    url = "/posts/"
+    weight = 20
+  
+  [[menu.main]]
+    name = "项目展示"
+    url = "/project/"
+    weight = 30
+  
+  [[menu.main]]
+    name = "关于"
+    url = "/about/"
+    weight = 40
+
+# 主题参数配置
+[params]
+  description = "我的个人博客和项目展示"
+  author = "Laurence-042"
+  
+  # 社交媒体配置
+  github = "Laurence-042"
