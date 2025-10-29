@@ -6,6 +6,12 @@ theme = 'ananke'
 # 静态文件目录配置
 staticDir = ['static']
 
+# 分类法（Taxonomies）配置：启用 series 以支持“合集/系列”页面
+[taxonomies]
+  category = "categories"
+  tag = "tags"
+  series = "series"
+
 # 导航菜单配置
 [menu]
   [[menu.main]]
@@ -17,6 +23,12 @@ staticDir = ['static']
     name = "文章"
     url = "/posts/"
     weight = 20
+  
+  # 合集入口：ProxyOS 半周报（指向 series 页面）
+  [[menu.main]]
+    name = "ProxyOS 半周报"
+    url = "/series/proxyos-weekly/"
+    weight = 25
   
   [[menu.main]]
     name = "项目展示"
