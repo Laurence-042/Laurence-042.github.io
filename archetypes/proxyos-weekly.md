@@ -1,20 +1,11 @@
 +++
 date = '{{ .Date }}'
 draft = true
-# 默认从文件名生成标题（按需重命名文件以带编号）
 title = '{{ replace .File.ContentBaseName "-" " " | title }}'
 slug = '{{ .File.ContentBaseName }}'
-
-# 归入系列合集
 series = ['proxyos-weekly']
-
-# 分类与标签（可根据需要调整）
 categories = ['ProxyOS', 'DevLog']
 tags = ['ProxyOS', '周报', '独立游戏开发', '技术日志']
-
-# 可选的头图配置
-# featured_image = ''
-# omit_header_text = true
 +++
 
 > TL;DR 概览
@@ -33,6 +24,9 @@ tags = ['ProxyOS', '周报', '独立游戏开发', '技术日志']
   - X
   - X
 ### 变更：
+  - X
+  - X
+### 修复：
   - X
   - X
 
