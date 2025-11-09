@@ -1,6 +1,6 @@
 +++
 date = '2025-11-01T12:28:24+08:00'
-draft = true
+draft = false
 title = 'Proxyos Weekly 002'
 slug = 'proxyos-weekly-002'
 series = ['proxyos-weekly']
