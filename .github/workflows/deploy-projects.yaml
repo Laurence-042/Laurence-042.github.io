@@ -469,10 +469,10 @@ jobs:
           
           echo "构建前的目录结构:"
           echo "Content目录:"
-          find content -type f | head -20
+          find content -type f | head -20 || true
           echo ""
           echo "Static目录:"
-          find static -type f | head -20
+          find static -type f 2>/dev/null | head -20 || true
           echo ""
           
           echo "开始Hugo构建..."
@@ -484,11 +484,11 @@ jobs:
             
           echo ""
           echo "构建后的public目录:"
-          find public -type f | head -30
+          find public -type f | head -30 || true
           echo ""
           
           echo "检查项目demo文件是否存在:"
-          find public -path "*/project/*/demo/*" -type f | head -10
+          find public -path "*/project/*/demo/*" -type f | head -10 || true
           echo ""
           echo "====================="
             
