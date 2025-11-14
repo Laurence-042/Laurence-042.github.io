@@ -88,6 +88,8 @@ jobs:
         working-directory: projects/${{ matrix.project }}
         run: |
           echo "=== 项目 ${{ matrix.project }} 调试信息 ==="
+          # 设置 NODE_ENV=production 以防部分依赖或脚本有环境依赖
+          export NODE_ENV=production
           echo "当前目录: $(pwd)"
           echo "目录内容:"
           ls -la
