@@ -251,24 +251,21 @@ jobs:
             cp -r projects/${{ matrix.project }}/public/* demo-output/project/${{ matrix.project }}/demo/
             echo "已复制 public 目录内容"
           else
-            # 如果没有找到构建目录，复制源文件
-            echo "⚠️ 未找到构建目录，复制源文件..."
+            # 如果没有找到构建目录，复制整个项目（保留目录结构）
+            echo "⚠️ 未找到构建目录，复制完整项目源文件（保留目录结构）..."
             
-            # 复制HTML文件
-            find projects/${{ matrix.project }} -name "*.html" -not -path "*/node_modules/*" -exec cp {} demo-output/project/${{ matrix.project }}/demo/ \; 2>/dev/null || true
+            # 使用 rsync 复制项目，排除不需要的文件
+            rsync -av \
+              --exclude='node_modules' \
+              --exclude='.git' \
+              --exclude='.github' \
+              --exclude='package-lock.json' \
+              --exclude='*.log' \
+              --exclude='.DS_Store' \
+              projects/${{ matrix.project }}/ \
+              demo-output/project/${{ matrix.project }}/demo/
             
-            # 复制JS文件
-            find projects/${{ matrix.project }} -name "*.js" -not -path "*/node_modules/*" -exec cp {} demo-output/project/${{ matrix.project }}/demo/ \; 2>/dev/null || true
-            
-            # 复制CSS文件
-            find projects/${{ matrix.project }} -name "*.css" -not -path "*/node_modules/*" -exec cp {} demo-output/project/${{ matrix.project }}/demo/ \; 2>/dev/null || true
-            
-            # 如果有src目录，复制src内容
-            if [ -d "projects/${{ matrix.project }}/src" ]; then
-              cp -r projects/${{ matrix.project }}/src/* demo-output/project/${{ matrix.project }}/demo/ 2>/dev/null || true
-            fi
-            
-            echo "已复制源文件"
+            echo "已复制完整项目结构"
           fi
           
           echo ""
