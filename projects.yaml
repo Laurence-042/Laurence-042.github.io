@@ -19,6 +19,18 @@ projects:
       - "敏感词检测"
       - "拼音匹配"
       - "浏览器书签工具"
+  silly-butt-helper:
+    name: "silly-butt-helper"
+    description: "一个也许可以帮助您身边伸手党朋友的小东西"
+    repository: "Laurence-042/silly-butt-helper"
+    demo_path: "/project/silly-butt-helper/demo/"
+    build_command: ""  # 或者 build, build:bookmarklets 等
+    build_dir: ""  # 构建输出目录
+    main_file: "index.html"  # 主要演示文件
+    tech_stack:
+      - "JavaScript"
+    features:
+      - "玩具"
     
   # 未来可以添加更多项目
   # another-project:
