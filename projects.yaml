@@ -31,6 +31,20 @@ projects:
       - "JavaScript"
     features:
       - "玩具"
+  color-change-image:
+    name: "color-change-image"
+    description: "幻影坦克制作器"
+    repository: "Laurence-042/color-change-image"
+    demo_path: "/project/color-change-image/demo/"
+    build_command: "build"  # 或者 build, build:bookmarklets 等
+    build_dir: "dist"  # 构建输出目录
+    main_file: "index.html"  # 主要演示文件
+    tech_stack:
+      - "JavaScript"
+      - "Vue.js"
+    features:
+      - "图像处理"
+      - "颜色替换"
     
   # 未来可以添加更多项目
   # another-project:
