@@ -133,11 +133,68 @@ jobs:
           if [ -f package.json ]; then
             echo "检测到 package.json，开始安装依赖..."
             
-            # 直接使用 npm install（更兼容旧版本的 lockfile）
-            # npm install 会自动处理 lockfile 版本问题
-            npm install
+            # 将 npm install 的输出保存到文件
+            set +e
+            npm install 2>&1 | tee /tmp/npm-install.log
+            EXIT_CODE=$?
+            set -e
+            
+            # 检查是否有错误信息
+            if grep -qi "npm error" /tmp/npm-install.log || grep -qi "Exit handler never called" /tmp/npm-install.log; then
+              echo ""
+              echo "================================================"
+              echo "✗ npm install 失败！检测到错误信息"
+              echo "================================================"
+              echo ""
+              
+              # 查找并显示最新的 npm 错误日志
+              echo "查找 npm 错误日志..."
+              NPM_LOG=$(find /home/runner/.npm/_logs -name "*-debug-*.log" -type f -printf '%T@ %p\n' 2>/dev/null | sort -n | tail -1 | cut -d' ' -f2-)
+              
+              if [ -n "$NPM_LOG" ] && [ -f "$NPM_LOG" ]; then
+                echo "找到错误日志: $NPM_LOG"
+                echo ""
+                echo "========== NPM 错误日志开始 =========="
+                cat "$NPM_LOG"
+                echo "========== NPM 错误日志结束 =========="
+                echo ""
+              else
+                echo "未找到 npm 错误日志文件"
+              fi
+              
+              echo "尝试删除 package-lock.json 和 node_modules 并重新安装..."
+              rm -rf package-lock.json node_modules
+              
+              set +e
+              npm install 2>&1 | tee /tmp/npm-install-retry.log
+              RETRY_EXIT_CODE=$?
+              set -e
+              
+              # 再次检查是否有错误
+              if grep -qi "npm error" /tmp/npm-install-retry.log || [ $RETRY_EXIT_CODE -ne 0 ]; then
+                echo ""
+                echo "✗ 重新安装也失败了"
+                
+                # 显示重试的错误日志
+                NPM_LOG_RETRY=$(find /home/runner/.npm/_logs -name "*-debug-*.log" -type f -printf '%T@ %p\n' 2>/dev/null | sort -n | tail -1 | cut -d' ' -f2-)
+                if [ -n "$NPM_LOG_RETRY" ] && [ -f "$NPM_LOG_RETRY" ]; then
+                  echo ""
+                  echo "========== 重试错误日志 =========="
+                  cat "$NPM_LOG_RETRY"
+                  echo "=================================="
+                fi
+                
+                exit 1
+              fi
+            fi
             
             echo "✓ 依赖安装完成"
+            
+            # 验证 node_modules 是否存在
+            if [ ! -d "node_modules" ]; then
+              echo "⚠️ 警告: node_modules 目录不存在，安装可能失败了"
+              exit 1
+            fi
           else
             echo "No package.json found, skipping npm install"
           fi
