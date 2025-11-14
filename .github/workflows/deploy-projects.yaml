@@ -131,7 +131,25 @@ jobs:
         working-directory: projects/${{ matrix.project }}
         run: |
           if [ -f package.json ]; then
-            npm ci
+            echo "检测到 package.json，开始安装依赖..."
+            
+            # 如果存在 package-lock.json，检查其版本
+            if [ -f package-lock.json ]; then
+              echo "检测到 package-lock.json"
+              
+              # 尝试使用 npm ci，如果失败则使用 npm install
+              echo "尝试使用 npm ci..."
+              if ! npm ci; then
+                echo "npm ci 失败，尝试删除旧的 lockfile 并使用 npm install..."
+                rm -f package-lock.json
+                npm install
+              fi
+            else
+              echo "未找到 package-lock.json，使用 npm install..."
+              npm install
+            fi
+            
+            echo "依赖安装完成"
           else
             echo "No package.json found, skipping npm install"
           fi
