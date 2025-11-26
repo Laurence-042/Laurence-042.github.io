@@ -383,7 +383,7 @@ jobs:
             echo "已将demo文件复制到static/project/"
             
             echo "Static目录结构:"
-            find static/project -type f 2>/dev/null | head -20 || true
+            find static/project -maxdepth 3 -type f 2>/dev/null | head -20 || true
           else
             echo "⚠️ 未找到demos/project目录"
             echo "可用的demo目录:"
