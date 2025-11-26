@@ -1,5 +1,9 @@
 # 项目配置文件
 # 定义需要部署的项目及其配置
+# 
+# 注意：添加新项目后，记得同步更新 .github/workflows/deploy-projects.yaml 中的两处默认项目列表：
+#   1. workflow_dispatch.inputs.projects.default
+#   2. check-updates job 中的 PROJECTS 变量
 
 projects:
   my-pen-is-broken:
