@@ -45,6 +45,28 @@ projects:
     features:
       - "图像处理"
       - "颜色替换"
+  
+  rimworld-ordinatus-calculi:
+    name: "RimWorld 计算仪典：破甲者之歌・留命者之吟"
+    description: "基于 Vue 3 + TypeScript 的 RimWorld 战斗机制计算器，计算武器DPS和护甲效能"
+    repository: "Laurence-042/rimworld-ordinatus-calculi"
+    demo_path: "/project/rimworld-ordinatus-calculi/demo/"
+    build_command: "build"
+    build_dir: "dist"
+    main_file: "index.html"
+    tech_stack:
+      - "Vue 3"
+      - "TypeScript"
+      - "Element Plus"
+      - "Chart.js"
+      - "Plotly.js"
+      - "Vite"
+    features:
+      - "武器DPS计算器"
+      - "多层护甲效能计算"
+      - "2D/3D数据可视化"
+      - "精确命中率模拟"
+      - "CSV数据解析"
     
   # 未来可以添加更多项目
   # another-project:
