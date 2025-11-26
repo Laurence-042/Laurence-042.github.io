@@ -226,9 +226,9 @@ jobs:
           
           echo ""
           echo "构建后的目录结构:"
-          find . -type d -name "dist" -o -name "build" -o -name "public" | while read dir; do
+          find . -type d -name "dist" -o -name "build" -o -name "public" 2>/dev/null | while read dir; do
             echo "目录: $dir"
-            ls -la "$dir" | head -10
+            ls -la "$dir" 2>/dev/null | head -10 || true
             echo ""
           done
           echo "========================="
