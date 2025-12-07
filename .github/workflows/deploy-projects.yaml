@@ -237,26 +237,23 @@ jobs:
         run: |
           echo "=== 准备Demo文件 ${{ matrix.project }} ==="
           mkdir -p demo-output/project/${{ matrix.project }}/demo
+          PROJECT_DIR="projects/${{ matrix.project }}"
+          DEMO_DIR="demo-output/project/${{ matrix.project }}/demo"
           
-          # 复制构建后的文件
-          echo "查找构建目录..."
-          if [ -d "projects/${{ matrix.project }}/dist" ]; then
-            echo "✓ 找到 dist 目录，复制文件..."
-            cp -r projects/${{ matrix.project }}/dist/* demo-output/project/${{ matrix.project }}/demo/
-            echo "已复制 dist 目录内容"
-          elif [ -d "projects/${{ matrix.project }}/build" ]; then
-            echo "✓ 找到 build 目录，复制文件..."
-            cp -r projects/${{ matrix.project }}/build/* demo-output/project/${{ matrix.project }}/demo/
-            echo "已复制 build 目录内容"
-          elif [ -d "projects/${{ matrix.project }}/public" ]; then
-            echo "✓ 找到 public 目录，复制文件..."
-            cp -r projects/${{ matrix.project }}/public/* demo-output/project/${{ matrix.project }}/demo/
-            echo "已复制 public 目录内容"
-          else
-            # 如果没有找到构建目录，复制整个项目（保留目录结构）
-            echo "⚠️ 未找到构建目录，复制完整项目源文件（保留目录结构）..."
-            
-            # 使用 rsync 复制项目，排除不需要的文件
+          # 复制构建后的文件（按优先级查找 dist > build > public）
+          BUILD_DIR=""
+          for dir in dist build public; do
+            if [ -d "$PROJECT_DIR/$dir" ]; then
+              BUILD_DIR="$PROJECT_DIR/$dir"
+              echo "✓ 找到 $dir 目录，复制文件..."
+              cp -r "$BUILD_DIR"/* "$DEMO_DIR"/
+              break
+            fi
+          done
+          
+          # 如果没有找到构建目录，复制整个项目
+          if [ -z "$BUILD_DIR" ]; then
+            echo "⚠️ 未找到构建目录，复制完整项目源文件..."
             rsync -av \
               --exclude='node_modules' \
               --exclude='.git' \
@@ -264,44 +261,69 @@ jobs:
               --exclude='package-lock.json' \
               --exclude='*.log' \
               --exclude='.DS_Store' \
-              projects/${{ matrix.project }}/ \
-              demo-output/project/${{ matrix.project }}/demo/
-            
-            echo "已复制完整项目结构"
+              "$PROJECT_DIR"/ "$DEMO_DIR"/
+          fi
+          
+          # 如果项目根目录有 README.md 且 demo 目录没有，复制过去
+          if [ -f "$PROJECT_DIR/README.md" ] && [ ! -f "$DEMO_DIR/README.md" ]; then
+            cp "$PROJECT_DIR/README.md" "$DEMO_DIR/"
+            echo "✓ 已复制项目根目录的 README.md"
           fi
           
           echo ""
           echo "Demo目录最终内容:"
-          ls -la demo-output/project/${{ matrix.project }}/demo/
+          ls -la "$DEMO_DIR"
           echo ""
           
           # 生成当前日期
           CURRENT_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           CURRENT_DATE_READABLE=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
           
-          # 创建项目介绍页面
-          cat > demo-output/project/${{ matrix.project }}/demo/README.md << EOF
-          ---
-          title: "${{ matrix.project }} Demo"
-          date: ${CURRENT_DATE}
-          draft: false
-          layout: "single"
-          ---
-          
-          # ${{ matrix.project }} Demo
-          
-          这是 [${{ matrix.project }}](https://github.com/Laurence-042/${{ matrix.project }}) 项目的在线演示。
-          
-          ## 项目信息
-          
-          - **源码仓库**: https://github.com/Laurence-042/${{ matrix.project }}
-          - **最后更新**: ${CURRENT_DATE_READABLE}
-          - **演示地址**: https://Laurence-042.github.io/project/${{ matrix.project }}/demo/
-          
-          ## 使用说明
-          
-          请访问项目源码仓库查看详细的使用说明和文档。
-          EOF
+          # 处理 README.md（确保有 front matter）
+          if [ -f "demo-output/project/${{ matrix.project }}/demo/README.md" ]; then
+            echo "✓ 项目已有README.md，检查 front matter..."
+            if head -1 "demo-output/project/${{ matrix.project }}/demo/README.md" | grep -q "^---"; then
+              echo "  README.md 已有 front matter，保持不变"
+            else
+              echo "  README.md 没有 front matter，添加..."
+              # 创建带 front matter 的临时文件
+              cat > /tmp/readme_with_frontmatter.md << EOF
+---
+title: "${{ matrix.project }}"
+date: ${CURRENT_DATE}
+draft: false
+---
+
+EOF
+              cat "demo-output/project/${{ matrix.project }}/demo/README.md" >> /tmp/readme_with_frontmatter.md
+              mv /tmp/readme_with_frontmatter.md "demo-output/project/${{ matrix.project }}/demo/README.md"
+              echo "  ✓ front matter 已添加"
+            fi
+          else
+            echo "创建默认的README.md..."
+            cat > demo-output/project/${{ matrix.project }}/demo/README.md << EOF
+---
+title: "${{ matrix.project }} Demo"
+date: ${CURRENT_DATE}
+draft: false
+layout: "single"
+---
+
+# ${{ matrix.project }} Demo
+
+这是 [${{ matrix.project }}](https://github.com/Laurence-042/${{ matrix.project }}) 项目的在线演示。
+
+## 项目信息
+
+- **源码仓库**: https://github.com/Laurence-042/${{ matrix.project }}
+- **最后更新**: ${CURRENT_DATE_READABLE}
+- **演示地址**: https://Laurence-042.github.io/project/${{ matrix.project }}/demo/
+
+## 使用说明
+
+请访问项目源码仓库查看详细的使用说明和文档。
+EOF
+          fi
           
           # 创建一个简单的index.html（如果不存在的话）
           if [ ! -f "demo-output/project/${{ matrix.project }}/demo/index.html" ]; then
@@ -418,26 +440,12 @@ jobs:
           for project in ${{ join(fromJson(needs.check-updates.outputs.projects-to-deploy), ' ') }}; do
             echo "处理项目: $project"
             
+            # README.md 已在 build-projects job 中处理好（带 front matter），直接复制
             if [ -f "static/project/$project/demo/README.md" ]; then
-              echo "✓ 使用项目的README.md"
-              # 使用项目的README作为内容
+              echo "✓ 复制项目的README.md作为内容页面"
               cp "static/project/$project/demo/README.md" "content/project/$project.md"
             else
-              echo "✓ 创建基本项目页面"
-              # 创建基本的项目页面
-              cat > "content/project/$project.md" << EOF
-          ---
-          title: "$project"
-          date: ${CURRENT_DATE}
-          draft: false
-          ---
-          
-          # $project
-          
-          [$project 在线演示](/project/$project/demo/)
-          
-          [查看源码](https://github.com/Laurence-042/$project)
-          EOF
+              echo "⚠️ 未找到README.md，这不应该发生"
             fi
             
             # 添加到索引页面
