@@ -302,56 +302,55 @@ jobs:
             fi
           else
             echo "创建默认的README.md..."
-            cat > "$DEMO_DIR/README.md" << EOFREADME
----
-title: "$PROJECT_NAME Demo"
-date: $CURRENT_DATE
-draft: false
-layout: "single"
----
-
-# $PROJECT_NAME Demo
-
-这是 [$PROJECT_NAME](https://github.com/Laurence-042/$PROJECT_NAME) 项目的在线演示。
-
-## 项目信息
-
-- **源码仓库**: https://github.com/Laurence-042/$PROJECT_NAME
-- **最后更新**: $CURRENT_DATE_READABLE
-- **演示地址**: https://Laurence-042.github.io/project/$PROJECT_NAME/demo/
-
-## 使用说明
-
-请访问项目源码仓库查看详细的使用说明和文档。
-EOFREADME
+            {
+              echo "---"
+              echo "title: \"$PROJECT_NAME Demo\""
+              echo "date: $CURRENT_DATE"
+              echo "draft: false"
+              echo "layout: \"single\""
+              echo "---"
+              echo ""
+              echo "# $PROJECT_NAME Demo"
+              echo ""
+              echo "这是 [$PROJECT_NAME](https://github.com/Laurence-042/$PROJECT_NAME) 项目的在线演示。"
+              echo ""
+              echo "## 项目信息"
+              echo ""
+              echo "- **源码仓库**: https://github.com/Laurence-042/$PROJECT_NAME"
+              echo "- **最后更新**: $CURRENT_DATE_READABLE"
+              echo "- **演示地址**: https://Laurence-042.github.io/project/$PROJECT_NAME/demo/"
+              echo ""
+              echo "## 使用说明"
+              echo ""
+              echo "请访问项目源码仓库查看详细的使用说明和文档。"
+            } > "$DEMO_DIR/README.md"
           fi
           
           # 创建一个简单的index.html（如果不存在的话）
           if [ ! -f "$DEMO_DIR/index.html" ]; then
             echo "创建默认的index.html..."
-            cat > "$DEMO_DIR/index.html" << EOFHTML
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>$PROJECT_NAME Demo</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 40px; }
-        .demo-container { max-width: 800px; margin: 0 auto; }
-        .file-list { margin: 20px 0; }
-        .file-list a { display: block; margin: 5px 0; padding: 10px; background: #f5f5f5; text-decoration: none; border-radius: 5px; }
-        .file-list a:hover { background: #e0e0e0; }
-    </style>
-</head>
-<body>
-    <div class="demo-container">
-        <h1>$PROJECT_NAME Demo</h1>
-        <p>这是 <a href="https://github.com/Laurence-042/$PROJECT_NAME" target="_blank">$PROJECT_NAME</a> 项目的在线演示。</p>
-        
-        <div class="file-list">
-            <h3>可用文件:</h3>
-EOFHTML
+            {
+              echo '<!DOCTYPE html>'
+              echo '<html lang="zh-CN">'
+              echo '<head>'
+              echo '    <meta charset="UTF-8">'
+              echo '    <meta name="viewport" content="width=device-width, initial-scale=1.0">'
+              echo "    <title>$PROJECT_NAME Demo</title>"
+              echo '    <style>'
+              echo '        body { font-family: Arial, sans-serif; margin: 40px; }'
+              echo '        .demo-container { max-width: 800px; margin: 0 auto; }'
+              echo '        .file-list { margin: 20px 0; }'
+              echo '        .file-list a { display: block; margin: 5px 0; padding: 10px; background: #f5f5f5; text-decoration: none; border-radius: 5px; }'
+              echo '        .file-list a:hover { background: #e0e0e0; }'
+              echo '    </style>'
+              echo '</head>'
+              echo '<body>'
+              echo '    <div class="demo-container">'
+              echo "        <h1>$PROJECT_NAME Demo</h1>"
+              echo "        <p>这是 <a href=\"https://github.com/Laurence-042/$PROJECT_NAME\" target=\"_blank\">$PROJECT_NAME</a> 项目的在线演示。</p>"
+              echo '        <div class="file-list">'
+              echo '            <h3>可用文件:</h3>'
+            } > "$DEMO_DIR/index.html"
             
             # 添加所有HTML文件链接
             find "$DEMO_DIR" -name "*.html" -not -name "index.html" | while read file; do
@@ -359,14 +358,13 @@ EOFHTML
               echo "            <a href=\"./$filename\">$filename</a>" >> "$DEMO_DIR/index.html"
             done
             
-            cat >> "$DEMO_DIR/index.html" << EOFHTML2
-        </div>
-        
-        <p><a href="https://github.com/Laurence-042/$PROJECT_NAME" target="_blank">查看源码</a></p>
-    </div>
-</body>
-</html>
-EOFHTML2
+            {
+              echo '        </div>'
+              echo "        <p><a href=\"https://github.com/Laurence-042/$PROJECT_NAME\" target=\"_blank\">查看源码</a></p>"
+              echo '    </div>'
+              echo '</body>'
+              echo '</html>'
+            } >> "$DEMO_DIR/index.html"
           fi
           
           echo "=== Demo文件准备完成 ==="
