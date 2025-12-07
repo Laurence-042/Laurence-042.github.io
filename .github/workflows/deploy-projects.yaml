@@ -278,94 +278,95 @@ jobs:
           # 生成当前日期
           CURRENT_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           CURRENT_DATE_READABLE=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          PROJECT_NAME="${{ matrix.project }}"
           
           # 处理 README.md（确保有 front matter）
-          if [ -f "demo-output/project/${{ matrix.project }}/demo/README.md" ]; then
+          if [ -f "$DEMO_DIR/README.md" ]; then
             echo "✓ 项目已有README.md，检查 front matter..."
-            if head -1 "demo-output/project/${{ matrix.project }}/demo/README.md" | grep -q "^---"; then
+            if head -1 "$DEMO_DIR/README.md" | grep -q "^---"; then
               echo "  README.md 已有 front matter，保持不变"
             else
               echo "  README.md 没有 front matter，添加..."
               # 创建带 front matter 的临时文件
-              cat > /tmp/readme_with_frontmatter.md << EOF
----
-title: "${{ matrix.project }}"
-date: ${CURRENT_DATE}
-draft: false
----
-
-EOF
-              cat "demo-output/project/${{ matrix.project }}/demo/README.md" >> /tmp/readme_with_frontmatter.md
-              mv /tmp/readme_with_frontmatter.md "demo-output/project/${{ matrix.project }}/demo/README.md"
+              {
+                echo "---"
+                echo "title: \"$PROJECT_NAME\""
+                echo "date: $CURRENT_DATE"
+                echo "draft: false"
+                echo "---"
+                echo ""
+                cat "$DEMO_DIR/README.md"
+              } > /tmp/readme_with_frontmatter.md
+              mv /tmp/readme_with_frontmatter.md "$DEMO_DIR/README.md"
               echo "  ✓ front matter 已添加"
             fi
           else
             echo "创建默认的README.md..."
-            cat > demo-output/project/${{ matrix.project }}/demo/README.md << EOF
+            cat > "$DEMO_DIR/README.md" << EOFREADME
 ---
-title: "${{ matrix.project }} Demo"
-date: ${CURRENT_DATE}
+title: "$PROJECT_NAME Demo"
+date: $CURRENT_DATE
 draft: false
 layout: "single"
 ---
 
-# ${{ matrix.project }} Demo
+# $PROJECT_NAME Demo
 
-这是 [${{ matrix.project }}](https://github.com/Laurence-042/${{ matrix.project }}) 项目的在线演示。
+这是 [$PROJECT_NAME](https://github.com/Laurence-042/$PROJECT_NAME) 项目的在线演示。
 
 ## 项目信息
 
-- **源码仓库**: https://github.com/Laurence-042/${{ matrix.project }}
-- **最后更新**: ${CURRENT_DATE_READABLE}
-- **演示地址**: https://Laurence-042.github.io/project/${{ matrix.project }}/demo/
+- **源码仓库**: https://github.com/Laurence-042/$PROJECT_NAME
+- **最后更新**: $CURRENT_DATE_READABLE
+- **演示地址**: https://Laurence-042.github.io/project/$PROJECT_NAME/demo/
 
 ## 使用说明
 
 请访问项目源码仓库查看详细的使用说明和文档。
-EOF
+EOFREADME
           fi
           
           # 创建一个简单的index.html（如果不存在的话）
-          if [ ! -f "demo-output/project/${{ matrix.project }}/demo/index.html" ]; then
+          if [ ! -f "$DEMO_DIR/index.html" ]; then
             echo "创建默认的index.html..."
-            cat > demo-output/project/${{ matrix.project }}/demo/index.html << 'EOF'
-          <!DOCTYPE html>
-          <html lang="zh-CN">
-          <head>
-              <meta charset="UTF-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <title>${{ matrix.project }} Demo</title>
-              <style>
-                  body { font-family: Arial, sans-serif; margin: 40px; }
-                  .demo-container { max-width: 800px; margin: 0 auto; }
-                  .file-list { margin: 20px 0; }
-                  .file-list a { display: block; margin: 5px 0; padding: 10px; background: #f5f5f5; text-decoration: none; border-radius: 5px; }
-                  .file-list a:hover { background: #e0e0e0; }
-              </style>
-          </head>
-          <body>
-              <div class="demo-container">
-                  <h1>${{ matrix.project }} Demo</h1>
-                  <p>这是 <a href="https://github.com/Laurence-042/${{ matrix.project }}" target="_blank">${{ matrix.project }}</a> 项目的在线演示。</p>
-                  
-                  <div class="file-list">
-                      <h3>可用文件:</h3>
-          EOF
+            cat > "$DEMO_DIR/index.html" << EOFHTML
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>$PROJECT_NAME Demo</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .demo-container { max-width: 800px; margin: 0 auto; }
+        .file-list { margin: 20px 0; }
+        .file-list a { display: block; margin: 5px 0; padding: 10px; background: #f5f5f5; text-decoration: none; border-radius: 5px; }
+        .file-list a:hover { background: #e0e0e0; }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <h1>$PROJECT_NAME Demo</h1>
+        <p>这是 <a href="https://github.com/Laurence-042/$PROJECT_NAME" target="_blank">$PROJECT_NAME</a> 项目的在线演示。</p>
+        
+        <div class="file-list">
+            <h3>可用文件:</h3>
+EOFHTML
             
             # 添加所有HTML文件链接
-            find demo-output/project/${{ matrix.project }}/demo/ -name "*.html" -not -name "index.html" | while read file; do
+            find "$DEMO_DIR" -name "*.html" -not -name "index.html" | while read file; do
               filename=$(basename "$file")
-              echo "            <a href=\"./$filename\">$filename</a>" >> demo-output/project/${{ matrix.project }}/demo/index.html
+              echo "            <a href=\"./$filename\">$filename</a>" >> "$DEMO_DIR/index.html"
             done
             
-            cat >> demo-output/project/${{ matrix.project }}/demo/index.html << 'EOF'
-                  </div>
-                  
-                  <p><a href="https://github.com/Laurence-042/${{ matrix.project }}" target="_blank">查看源码</a></p>
-              </div>
-          </body>
-          </html>
-          EOF
+            cat >> "$DEMO_DIR/index.html" << EOFHTML2
+        </div>
+        
+        <p><a href="https://github.com/Laurence-042/$PROJECT_NAME" target="_blank">查看源码</a></p>
+    </div>
+</body>
+</html>
+EOFHTML2
           fi
           
           echo "=== Demo文件准备完成 ==="
