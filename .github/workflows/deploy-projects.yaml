@@ -275,11 +275,15 @@ jobs:
           ls -la demo-output/project/${{ matrix.project }}/demo/
           echo ""
           
+          # 生成当前日期
+          CURRENT_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          CURRENT_DATE_READABLE=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          
           # 创建项目介绍页面
-          cat > demo-output/project/${{ matrix.project }}/demo/README.md << 'EOF'
+          cat > demo-output/project/${{ matrix.project }}/demo/README.md << EOF
           ---
           title: "${{ matrix.project }} Demo"
-          date: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          date: ${CURRENT_DATE}
           draft: false
           layout: "single"
           ---
@@ -291,7 +295,7 @@ jobs:
           ## 项目信息
           
           - **源码仓库**: https://github.com/Laurence-042/${{ matrix.project }}
-          - **最后更新**: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          - **最后更新**: ${CURRENT_DATE_READABLE}
           - **演示地址**: https://Laurence-042.github.io/project/${{ matrix.project }}/demo/
           
           ## 使用说明
@@ -375,6 +379,9 @@ jobs:
           # 创建projects内容目录
           mkdir -p content/project
           
+          # 生成当前日期
+          CURRENT_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          
           # 移动demo文件到Hugo的static目录
           if [ -d "demos/project" ]; then
             echo "✓ 找到demos/project目录"
@@ -391,10 +398,10 @@ jobs:
           fi
           
           # 创建项目索引页面
-          cat > content/project/_index.md << 'EOF'
+          cat > content/project/_index.md << EOF
           ---
           title: "项目演示"
-          date: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          date: ${CURRENT_DATE}
           draft: false
           ---
           
@@ -421,7 +428,7 @@ jobs:
               cat > "content/project/$project.md" << EOF
           ---
           title: "$project"
-          date: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          date: ${CURRENT_DATE}
           draft: false
           ---
           
