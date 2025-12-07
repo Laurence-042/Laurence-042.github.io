@@ -1,6 +1,6 @@
 baseURL = 'https://Laurence-042.github.io/'
-languageCode = 'en-us'
-title = 'My New Hugo Site'
+languageCode = 'zh-cn'
+title = "Laurence-042's Workshop"
 theme = 'ananke'
 
 # Markdown 渲染配置
@@ -52,8 +52,17 @@ staticDir = ['static']
 
 # 主题参数配置
 [params]
-  description = "我的个人博客和项目展示"
+  # 站点描述（用于 SEO 和页脚）
+  description = "技术探索、游戏开发、工具制作 - 一个程序员的折腾记录"
   author = "Laurence-042"
+  
+  # 主页样式
+  background_color_class = "bg-dark-gray"
+  body_classes = "avenir bg-near-white"
+  text_color = ""
+  
+  # 文章列表显示阅读时间
+  show_reading_time = true
   
   # 社交媒体配置
   github = "Laurence-042"
