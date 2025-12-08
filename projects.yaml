@@ -71,6 +71,25 @@ projects:
       - "2D/3D数据可视化"
       - "精确命中率模拟"
       - "CSV数据解析"
+
+  life-credit-pill:
+    name: "回春丹 MV"
+    description: "游戏内药物公司产品广告歌曲 MV，使用 TypeScript + SVG 动画制作"
+    repository: "Laurence-042/life-credit-pill"
+    demo_path: "/project/life-credit-pill/demo/"
+    build_command: "build"
+    build_dir: "dist"
+    main_file: "index.html"
+    tech_stack:
+      - "TypeScript"
+      - "Vite"
+      - "GSAP"
+      - "SVG Animation"
+    features:
+      - "歌词同步动画"
+      - "SVG 火柴人动画"
+      - "LRC 时间轴解析"
+      - "场景切换系统"
     
   # 未来可以添加更多项目
   # another-project:
