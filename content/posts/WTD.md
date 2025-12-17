@@ -32,7 +32,7 @@ weight = 1
 
 ## [silly butt helper](https://laurence-042.github.io/project/silly-butt-helper/demo/)（2021）
 
-就是一个简单的带动画的网页。会从query里拿参数，然后播放一段搜索这个关键词的动画，并自动跳转到query里指定的搜索引擎搜索这个关键词的页面。就是当你我学js的时候尝试把传参、网页加载流程、第三方库引用之类的东西都用一遍得到的小玩具
+就是一个简单的带动画的网页。会从query里拿参数，然后播放一段搜索这个关键词的动画，并自动跳转到query里指定的搜索引擎搜索这个关键词的页面。就是当年我学js的时候尝试把传参、网页加载流程、第三方库引用之类的东西都用一遍得到的小玩具
 
 ## [言阅姬](https://laurence-042.github.io/project/my-pen-is-broken/demo/bookmarks.html)（2024）
 
