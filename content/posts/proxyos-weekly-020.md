@@ -82,7 +82,7 @@ tags = ['ProxyOS', '周报', '独立游戏开发', '技术日志']
 
 这一次我使用了如下结构（恢复阶段的Terminal比较特殊，被改炸了，下期修）
 
-![alt text](proxyos-weekly-020/PixPin_2026-01-04_18-33-31.png)
+![alt text](./proxyos-weekly-020/PixPin_2026-01-04_18-33-31.png)
 
 可以看到这把 Pocket 和 Archive 两个应用都做了大量简化并深度集成到了新的 UI 中，这实际上比单独的应用更能体现它们之间的配合关系，也更方便操作
 
