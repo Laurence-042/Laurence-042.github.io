@@ -90,6 +90,30 @@ projects:
       - "SVG 火柴人动画"
       - "LRC 时间轴解析"
       - "场景切换系统"
+
+  oral-oiiaioiiiai:
+    name: "OIIAIOIIIAI — 魔性发声音游"
+    description: "对着麦克风发出 oiiaioiiiai，让猫咪疯狂旋转！基于实时元音识别的浏览器音游"
+    repository: "Laurence-042/oral-oiiaioiiiai"
+    demo_path: "/project/oral-oiiaioiiiai/demo/"
+    build_command: "build"
+    build_dir: "dist"
+    main_file: "index.html"
+    tech_stack:
+      - "Vue 3"
+      - "TypeScript"
+      - "Vite"
+      - "TensorFlow.js"
+      - "Tone.js"
+      - "Web Audio API"
+      - "Canvas 2D"
+    features:
+      - "实时元音识别 (CNN)"
+      - "五阶段视觉进化"
+      - "程序化 BGM 生成"
+      - "分享系统 + 高光卡片"
+      - "全网排行榜"
+      - "资源包系统"
     
   # 未来可以添加更多项目
   # another-project:
