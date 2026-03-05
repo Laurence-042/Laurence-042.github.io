@@ -1,5 +1,5 @@
 +++
-date = '2026-03-1T10:05:00+08:00'
+date = '2026-03-01T10:05:00+08:00'
 draft = false
 title = 'Proxyos Weekly 038'
 slug = 'proxyos-weekly-038'
