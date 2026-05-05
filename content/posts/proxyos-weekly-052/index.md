@@ -18,7 +18,7 @@ tags = ['ProxyOS', '周报', '独立游戏开发', '技术日志']
 # 本期目标
 
 - [ ] 把 demo 从 alpha 打磨到 beta
-  - [ ] 第一章南，然后使用一个独立的、默认启动的程序来带着玩家敲一遍，完事之后再让玩家用 diagnose 和 manual fix。 
+  - [ ] 第一章 
     - [ ] xterm 的 col 似乎计算不太对劲，有时候一行末尾的字只显示了一半，需要看下 xterm 实现，必要的话进行修复
     - [ ] xterm 的 cursor_pos 在 cursor 不在视野内时返回末行 pos 是个 bug，而且在外面基本没法绕，只能修 xterm
     - [ ] 重新实现第一章的系统
@@ -99,7 +99,7 @@ xterm优先级不大，可以留到下一期
 # 下期计划
 
 - [ ] 把 demo 从 alpha 打磨到 beta
-  - [ ] 第一章南，然后使用一个独立的、默认启动的程序来带着玩家敲一遍，完事之后再让玩家用 diagnose 和 manual fix。 
+  - [ ] 第一章 
     - [ ] xterm 的 col 似乎计算不太对劲，有时候一行末尾的字只显示了一半，需要看下 xterm 实现，必要的话进行修复
     - [ ] xterm 的 cursor_pos 在 cursor 不在视野内时返回末行 pos 是个 bug，而且在外面基本没法绕，只能修 xterm
     - [ ] 重新实现第一章的系统
