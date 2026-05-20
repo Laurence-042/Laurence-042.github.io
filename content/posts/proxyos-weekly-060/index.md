@@ -144,13 +144,32 @@ CodeRow 从继承 HBoxContainer 改为内部组合一个 HBoxContainer， HBoxCo
 
 所以更新到 Godot4.6 就没事了
 
+> 说是没事只是没大事，后来因为模式变化，又改了不少东西来保证行号样式、数值没问题
+
+> 下一期的 2:03 补充：确实有问题……是的，我知道我又在作妖修仙，但这玩意不搞定我睡不踏实
+
+Godot的CodeEdit甚至TextEdit里有大量硬编码的内置padding，且无法通过修改godot源码之外的方式避免。以下是其中一些示例
+
+| 位置             | 硬编码内置padding                                            | 避免方式                                                     |
+| ---------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| gutter和内容之间 | 当gutter存在时，会给gutter右边加2px padding（TextEdit的_update_gutter_width里设置了gutter_padding） | gutter_padding是私有属性，不可修改，但可以通过控制CodeRow（使用单独空CodeEdit显示gutter）和CodeBlock（直接用CodeEdit显示内容）的gutter width相对大小来补偿偏移 |
+| 内容右侧         | `fit_content_width` 的最小尺寸缓存会额外 +10（TextEdit里有`content_size_cache = Vector2i(total_width + 10, MAX(total_rows, 1) * get_line_height());`） | 无法处理，如果fit_content_width false，那么就会很难控制宽度，导致要么宽度过宽带来新的padding，或者宽度过窄出现水平滚动条。但fit_content_width true，那么这个10px的padding就没法避免 |
+
+因为存在`fit_content_width` 的不可解决矛盾，我无法在同一行使用CodeEdit水平拼接来实现部分可编辑部分不可编辑的效果，所以我不得不把editable_code_segment和readonly_code_segment改回使用RichTextLabel实现
+
+虽然这用 RichTextLabel 和 LineEdit 硬怼的方案看着很绿皮，但确实能用。下图中完全看不出48行是用3个部件拼起来的，也看不出其和47行、49行都不在一起
+
+![](./PixPin_2026-05-21_02-15-19.png)
+
 # 瓶颈与问题清单
 
 > 哪些问题还没解，但也许我已经知道“它们不是什么”？
 
-我计划把 CodeRow 也切到 CodeEdit 方案，而不是像现在这样用 RichTextLabel 和 LineEdit 硬怼
+CodeRow 用 RichTextLabel 和 LineEdit 硬怼终究是个花活
 
-但我想我得处理一些诸如 padding、border、margin 之类的幺蛾子
+但 CodeEdit 确实绝对不能用于水平拼接
+
+也许我可以使用类似我在xterm里做的那样，挂个悬浮编辑区，但是悬浮编辑区的对齐恐怕同样是场灾难，还不如用 RichTextLabel 和 LineEdit 硬怼……
 
 # 下期计划
 
