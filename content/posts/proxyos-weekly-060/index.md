@@ -1,8 +1,8 @@
 +++
 date = '2026-05-19T10:33:00+08:00'
 draft = false
-title = 'Proxyos Weekly 059'
-slug = 'proxyos-weekly-059'
+title = 'Proxyos Weekly 060'
+slug = 'proxyos-weekly-060'
 series = ['proxyos-weekly']
 categories = ['ProxyOS', 'DevLog']
 tags = ['ProxyOS', '周报', '独立游戏开发', '技术日志']
