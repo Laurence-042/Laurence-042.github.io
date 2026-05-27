@@ -472,21 +472,57 @@ jobs:
             find demos -type d 2>/dev/null | head -10 || true
           fi
           
-          # 创建项目索引页面
+          # 创建用于解析 projects.yaml 并生成项目卡片的 Python 脚本
+          cat > /tmp/gen_project_entry.py << 'PYEOF'
+import yaml, sys
+
+project_id = sys.argv[1]
+
+with open('projects.yaml', 'r', encoding='utf-8') as f:
+    config = yaml.safe_load(f)
+
+# 合并顶层 projects 字典和可能误放在顶层的项目（YAML 格式宽容处理）
+all_projects = dict(config.get('projects') or {})
+for k, v in config.items():
+    if k not in ('projects', 'global') and isinstance(v, dict) and 'name' in v:
+        all_projects[k] = v
+
+info = all_projects.get(project_id, {})
+
+name       = info.get('name', project_id)
+desc       = info.get('description', '')
+repo       = info.get('repository', '')
+tech_stack = info.get('tech_stack', [])
+features   = info.get('features', [])
+
+print(f"### [{name}](/project/{project_id}/)\n")
+if desc:
+    print(f"> {desc}\n")
+if repo:
+    print(f"🔗 **源码**: [github.com/{repo}](https://github.com/{repo})")
+if tech_stack:
+    print(f"🛠️ **技术栈**: {', '.join(tech_stack)}")
+if features:
+    print(f"✨ **特性**: {' · '.join(features)}")
+print(f"\n**[在线演示 →](/project/{project_id}/demo/)**\n")
+print("---\n")
+PYEOF
+
+          # 创建项目索引页面头部
           cat > content/project/_index.md << EOF
-          ---
-          title: "项目演示"
-          date: ${CURRENT_DATE}
-          draft: false
-          ---
-          
-          # 项目演示集合
-          
-          这里收集了我的各个项目的在线演示。
-          
-          ## 可用项目
-          
-          EOF
+---
+title: "项目演示"
+date: ${CURRENT_DATE}
+draft: false
+---
+
+# 项目演示集合
+
+这里收集了我的各个项目的在线演示。
+
+## 可用项目
+
+EOF
           
           # 为每个项目创建介绍页面
           echo "创建项目页面..."
@@ -501,8 +537,8 @@ jobs:
               echo "⚠️ 未找到README.md，这不应该发生"
             fi
             
-            # 添加到索引页面
-            echo "- [$project](/project/$project/) - [在线演示](/project/$project/demo/)" >> content/project/_index.md
+            # 从 projects.yaml 读取元信息生成富文本卡片并追加到索引页面
+            python3 /tmp/gen_project_entry.py "$project" >> content/project/_index.md
           done
           
           echo ""
