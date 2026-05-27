@@ -493,7 +493,13 @@ EOF
           
           # 为每个项目创建介绍页面
           echo "创建项目页面..."
-          for project in ${{ join(fromJson(needs.check-updates.outputs.projects-to-deploy), ' ') }}; do
+          PROJECTS_LIST="${{ join(fromJson(needs.check-updates.outputs.projects-to-deploy), ' ') }}"
+          echo "[DEBUG] projects-to-deploy 原始值: $PROJECTS_LIST"
+          echo "[DEBUG] python3 路径: $(which python3)"
+          echo "[DEBUG] pyyaml 是否可用: $(python3 -c 'import yaml; print(yaml.__version__)' 2>&1)"
+          echo "[DEBUG] scripts/gen_project_entry.py 是否存在: $(ls -la scripts/gen_project_entry.py 2>&1)"
+          echo "[DEBUG] projects.yaml 是否存在: $(ls -la projects.yaml 2>&1)"
+          for project in $PROJECTS_LIST; do
             echo "处理项目: $project"
             
             # README.md 已在 build-projects job 中处理好（带 front matter），直接复制
@@ -506,6 +512,7 @@ EOF
             
             # 从 projects.yaml 读取元信息生成富文本卡片并追加到索引页面
             python3 scripts/gen_project_entry.py "$project" >> content/project/_index.md
+            echo "[DEBUG] gen_project_entry.py 退出码: $?"
           done
           
           echo ""
