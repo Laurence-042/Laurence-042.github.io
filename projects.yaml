@@ -115,6 +115,26 @@ projects:
       - "全网排行榜"
       - "资源包系统"
     
+ya-byok-chat:
+  name: "YA-BYOK-Chat"
+  description: "极简 BYOK 聊天应用，兼容所有 OpenAI 格式 API，一键生成含完整配置的分享链接"
+  repository: "Laurence-042/YA-BYOK-Chat"
+  demo_path: "/project/YA-BYOK-Chat/demo/"
+  build_command: "build"
+  build_dir: "dist"
+  main_file: "index.html"
+  tech_stack:
+    - "Vue 3"
+    - "TypeScript"
+    - "Element Plus"
+    - "Vite"
+    - "vue-i18n"
+    - "marked"
+    - "Mermaid"
+  features:
+    - "LLM 接入"
+    - "Agent 摘要"
+    
   # 未来可以添加更多项目
   # another-project:
   #   name: "另一个项目"
