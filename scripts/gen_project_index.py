@@ -45,6 +45,8 @@ lines = [
     "",
     "## 可用项目",
     "",
+    '<div class="flex flex-wrap nl3 nr3">',
+    "",
 ]
 
 # 为每个项目生成卡片
@@ -58,22 +60,35 @@ for project_id in project_ids:
     tech_stack = info.get('tech_stack', [])
     features   = info.get('features', [])
 
-    lines.append(f"### [{name}](/project/{project_id}/)")
+    # 技术栈标签
+    tag_html = ''.join(
+        f'<span class="f7 dib bg-washed-blue br1 ph2 pv1 mr1 mb1 dark-blue">{t}</span>'
+        for t in tech_stack
+    )
+
+    github_url = f"https://github.com/{repo}" if repo else ""
+    demo_url   = f"/project/{project_id}/demo/"
+    page_url   = f"/project/{project_id}/"
+
+    card = f"""\
+<div class="w-50-l w-100 ph3 mb4">
+<div class="h-100 ba b--black-10 br2 pa4 flex flex-column">
+<h3 class="f4 fw7 mt0 mb2"><a href="{page_url}" class="link dark-gray dim">{name}</a></h3>
+<p class="f6 mid-gray mt0 mb3 flex-auto">{desc}</p>
+{f'<div class="mb3">{tag_html}</div>' if tag_html else ''}\
+{f'<p class="f7 mid-gray mt0 mb2 i">✨ {" · ".join(features)}</p>' if features else ''}\
+<div class="flex items-center justify-between mt2">
+{f'<a href="{github_url}" class="f7 link blue dim" target="_blank" rel="noopener">GitHub ↗</a>' if github_url else '<span></span>'}\
+<a href="{demo_url}" class="f6 fw6 link white bg-dark-blue br1 pv2 ph3 dim no-underline">在线演示 →</a>
+</div>
+</div>
+</div>"""
+
+    lines.append(card)
     lines.append("")
-    if desc:
-        lines.append(f"> {desc}")
-        lines.append("")
-    if repo:
-        lines.append(f"🔗 **源码**: [github.com/{repo}](https://github.com/{repo})")
-    if tech_stack:
-        lines.append(f"🛠️ **技术栈**: {', '.join(tech_stack)}")
-    if features:
-        lines.append(f"✨ **特性**: {' · '.join(features)}")
-    lines.append("")
-    lines.append(f"**[在线演示 →](/project/{project_id}/demo/)**")
-    lines.append("")
-    lines.append("---")
-    lines.append("")
+
+lines.append("</div>")
+lines.append("")
 
 # 写入目标文件
 out_path = os.path.join(os.path.dirname(__file__), '..', 'content', 'project', '_index.md')
