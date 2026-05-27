@@ -475,30 +475,19 @@ jobs:
             find demos -type d 2>/dev/null | head -10 || true
           fi
           
-          # 创建项目索引页面头部
-          cat > content/project/_index.md << EOF
----
-title: "项目演示"
-date: ${CURRENT_DATE}
-draft: false
----
-
-# 项目演示集合
-
-这里收集了我的各个项目的在线演示。
-
-## 可用项目
-
-EOF
-          
           # 为每个项目创建介绍页面
           echo "创建项目页面..."
           PROJECTS_LIST="${{ join(fromJson(needs.check-updates.outputs.projects-to-deploy), ' ') }}"
           echo "[DEBUG] projects-to-deploy 原始值: $PROJECTS_LIST"
           echo "[DEBUG] python3 路径: $(which python3)"
           echo "[DEBUG] pyyaml 是否可用: $(python3 -c 'import yaml; print(yaml.__version__)' 2>&1)"
-          echo "[DEBUG] scripts/gen_project_entry.py 是否存在: $(ls -la scripts/gen_project_entry.py 2>&1)"
+          echo "[DEBUG] scripts/gen_project_index.py 是否存在: $(ls -la scripts/gen_project_index.py 2>&1)"
           echo "[DEBUG] projects.yaml 是否存在: $(ls -la projects.yaml 2>&1)"
+
+          # 生成完整的项目索引页面（front matter + 所有项目卡片）
+          python3 scripts/gen_project_index.py $PROJECTS_LIST
+          echo "[DEBUG] gen_project_index.py 退出码: $?"
+
           for project in $PROJECTS_LIST; do
             echo "处理项目: $project"
             
@@ -509,10 +498,6 @@ EOF
             else
               echo "⚠️ 未找到README.md，这不应该发生"
             fi
-            
-            # 从 projects.yaml 读取元信息生成富文本卡片并追加到索引页面
-            python3 scripts/gen_project_entry.py "$project" >> content/project/_index.md
-            echo "[DEBUG] gen_project_entry.py 退出码: $?"
           done
           
           echo ""
