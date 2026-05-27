@@ -102,7 +102,7 @@ jobs:
         id: check
         run: |
           # 默认项目列表（用于push触发）
-          PROJECTS='["my-pen-is-broken", "silly-butt-helper", "color-change-image", "rimworld-ordinatus-calculi", "life-credit-pill", "oral-oiiaioiiiai"]'
+          PROJECTS='["my-pen-is-broken", "silly-butt-helper", "color-change-image", "rimworld-ordinatus-calculi", "life-credit-pill", "oral-oiiaioiiiai", "ya-byok-chat"]'
           
           # 如果是手动触发，使用输入的项目列表
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
