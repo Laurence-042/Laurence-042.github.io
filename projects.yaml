@@ -134,6 +134,19 @@ projects:
     features:
       - "LLM 接入"
       - "Agent 摘要"
+  
+  ai-health-video-starter:
+    name: "AI Health Video Starter"
+    description: "一份给长辈照着做的 AI 养生短视频制作陪练单。"
+    repository: "Laurence-042/ai-health-video-starter"
+    demo_path: "/project/ai-health-video-starter/demo/"
+    build_command: ""  # 或者 build, build:bookmarklets 等
+    build_dir: ""  # 构建输出目录
+    main_file: "index.html"  # 主要演示文件
+    tech_stack:
+      - "JavaScript"
+    features:
+      - "玩具"
 
   # 未来可以添加更多项目
   # another-project:

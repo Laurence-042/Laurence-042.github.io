@@ -67,7 +67,7 @@ on:
       projects:
         description: '要部署的项目列表 (JSON格式)'
         required: true
-        default: '["my-pen-is-broken", "silly-butt-helper", "color-change-image", "rimworld-ordinatus-calculi", "life-credit-pill", "oral-oiiaioiiiai", "ya-byok-chat"]'
+        default: '["my-pen-is-broken", "silly-butt-helper", "color-change-image", "rimworld-ordinatus-calculi", "life-credit-pill", "oral-oiiaioiiiai", "ya-byok-chat", "ai-health-video-starter"]'
         type: string
   # schedule:
   #   # 每天UTC 02:00 (北京时间10:00) 自动检查更新
@@ -102,7 +102,7 @@ jobs:
         id: check
         run: |
           # 默认项目列表（用于push触发）
-          PROJECTS='["my-pen-is-broken", "silly-butt-helper", "color-change-image", "rimworld-ordinatus-calculi", "life-credit-pill", "oral-oiiaioiiiai", "ya-byok-chat"]'
+          PROJECTS='["my-pen-is-broken", "silly-butt-helper", "color-change-image", "rimworld-ordinatus-calculi", "life-credit-pill", "oral-oiiaioiiiai", "ya-byok-chat", "ai-health-video-starter"]'
           
           # 如果是手动触发，使用输入的项目列表
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
