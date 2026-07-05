@@ -202,6 +202,11 @@ enabled_if:
         event: task_c
 ```
 
+新增一个Trigger用于主动通过IPC调python侧后端的handler进行校验，以此让mod更加灵活，而不是局限于给定的触发器
+新增一个Action用于主动通过IPC调python侧后端的handler产生效果，以此让mod更加灵活，而不是局限于触发指定参数的Action
+
+还在考虑是加个对应Action来直接在yaml里设置使用变量并在后续引用其值，还是要求都走python侧的handler trigger/action机制
+
 # 瓶颈与问题清单
 
 > 哪些问题还没解，但也许我已经知道“它们不是什么”？
