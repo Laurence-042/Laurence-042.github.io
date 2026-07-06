@@ -61,7 +61,7 @@ tags = ['ProxyOS', '周报', '独立游戏开发', '技术日志']
 
 而且大言不惭地说，没准这个 mod 机制能让游戏更出圈呢？
 
-> 梦话留到梦里说吧。jpg
+> 梦话留到梦里说吧 .jpg
 
 ## Mod 系统的设计思想
 
@@ -70,12 +70,12 @@ tags = ['ProxyOS', '周报', '独立游戏开发', '技术日志']
 ProxyOS mod 机制把 python 当作一个内容加载器使用：
 
 - Godot 主程序负责启动 Python mod 框架
-- Python mod 框架框架负责发现 mod、解析依赖、安装/同步环境、加载入口点、扫描内容目录、汇总业务 payload。
+- Python mod 框架负责发现 mod、解析依赖、安装/同步环境、加载入口点、扫描内容目录、汇总业务 payload。
 - Godot 主程序从 Python mod 框架接收所有内容资源、注册主程序侧资源，并执行窗口/UI/存档/应用状态变化。
 - 内容资源中对标现实为 Python 侧提供能力
   - mod 可以自定义 api handler，并在网页中使用任意自己想使用的技术，把 mod 当 server 调
   - mod 可以自定义 Python 侧 Action，让游戏进行到某个阶段时自动调用 mod 的逻辑，把 mod 作为游戏逻辑的扩充
-  - mod 可自可以要求主程序为其持久化数据，以此实现自己的数据维护
+  - mod 可以要求主程序为其持久化数据，以此实现自己的数据维护
 
 ## 典型目录结构
 
@@ -202,6 +202,110 @@ proxyos-echo-base = { workspace = true }
 
 Godot 和 Python `mod_manager` 彼此只通过 IPC 交流，而 Godot 不感知 Mod 的结构，以此保证双方耦合最小化，以后甚至可以直接升级 mod manager。
 
+>Q：为什么不用 Godot 的 Mod Loader？
+>
+>A：因为我不想用啥库都没有的 Godot 写后端，推己及人我觉得 Mod 作者也不会想
+>
+>Q：为什么不使用类 Rimworld 的 Assembly+Def 架构？
+>
+>A：在 demo 阶段我想尽量区分内容（Python 侧主导）和游戏底层能力（Godot 侧主导），如果允许通过类似 Assemble 的方式加载 gdscript，开发负担会超出我的控制。而且这个游戏不同于以增加“实例”为主要扩展方式的 Rimworld，游戏内各个网站的后端都可能有自己独有的“逻辑”，因此这个游戏需要以“逻辑（也就是 Python 侧的 api handler）”为首要考量设计 Mod 架构，而非以“实例（承载具体类型具体数据的 Def）”为主
+
+### 整体内容加载架构
+
+```mermaid
+flowchart TD
+    subgraph G ["Godot 主程序"]
+        G1["FrameworkLauncher"]
+        G2["窗口/UI/存档/<br>应用状态变化"]
+        G3["Spider 路由表"]
+        G4["后端 Route Proxy"]
+    end
+
+    subgraph P ["Python mod_manager 框架"]
+        P1["发现 mod"]
+        P2["解析依赖"]
+        P3["安装/同步环境"]
+        P4["加载入口点"]
+        P5["扫描内容目录"]
+        P6["汇总业务 payload"]
+    end
+
+    subgraph M ["Mod 内容 (Core Mod & 其他）"]
+        M1["前端页面组织"]
+        M2["后端 handler"]
+    end
+
+    G1 -- "1. 启动最小依赖" --> P1
+    P1 -- "2. 读取元数据与列表" --> P2
+    P2 -- "3. 生成 pyproject.toml & 同步 .venv" --> P3
+    P3 -- "4. 告知主程序环境准备完成" --> G1
+    G1 -- "5. 启动 _framework/main.py"--> P4
+    P4 -- "6. 调用 proxyos_register()" --> P5
+    P5 -- "7. 扫描约定目录" --> M1
+    P5 -- "8. 扫描约定目录" --> M2
+    M1 & M2 -- "9. 返回业务 payload" --> P6
+    P6 -- "10. framework_ready IPC" --> G2
+    G2 -- "11. 缓存快照 & 注册资源" --> G3
+    G2 -- "12. 注册钱包 issuer 等" --> G4
+    G3 -- "13. 页面路由映射" --> M1
+    G4 -- "14. 请求转发" --> M2
+
+```
+
+> Q：为什么让 Python 侧搞 mod manager，这个不应该是游戏核心机制吗？
+>
+> A：确实可以说是核心机制的一部分，但实际上这个部分本质上是 Godot 侧和 Python 侧的交界处，划分并不那么绝对。而用 Python 更好处理依赖解析和环境同步，启动各模块的 python 侧 sdk 扫描其需要的资源也更方便，所以我使用 Python 侧做了 mod manager
+
+### 具体页面数据流
+
+```mermaid
+sequenceDiagram
+    participant G as Godot 主程序
+    participant PM as Python mod_manager
+    participant M as Mod 内容<br>(Core & Others)
+
+    Note over G,PM: 启动阶段
+    G->>PM: FrameworkLauncher 启动<br>mod_manager preflight
+    activate PM
+    PM->>PM: 读取 About.json & mod_list.txt
+    PM->>PM: 生成 pyproject.toml & 同步 .venv
+    PM->>PM: 按 manifest 顺序加载 active mods
+    PM->>M: 让每个模块 sdk 调用 proxyos_register()
+    activate M
+    M-->>PM: 模块 sdk 扫描 Organizations/Domains/Workspace 得到 Mod 里对应类型资源
+    deactivate M
+    PM-->>G: framework_ready IPC<br>(mod_catalog, payload 等）
+    deactivate PM
+    G->>G: 缓存只读快照<br>注册 Spider route, issuer, 任务等
+
+    Note over G,M: 运行时交互阶段
+    participant W as WebView
+
+    W->>G: 访问 proxy://example.local/...
+    G->>G: Spider route table 映射
+    G->>M: 加载 Mod 的 frontend/pages
+    activate M
+    M-->>G: 返回页面资源
+    deactivate M
+    G-->>W: 渲染页面
+    G-->>W: 注入剪贴板 polyfill、脚本注入器
+    W-->>G: 脚本注入器请求页面对应的可注入 Mod 脚本
+    G-->>W: 可注入 Mod 脚本
+    W-->>W: 注入 Mod 脚本
+
+    W->>G: 发起后端请求
+    G->>G: IPC 转发至 Python route handler
+    G->>M: 调用对应 Mod 的 backend API
+    activate M
+    M-->>G: 返回处理结果
+    deactivate M
+    G-->>W: 返回响应
+```
+
+> Q：为什么 WebView 显示一个页面需要来回乒乓？直接在启动页面时注入脚本不就可以了吗？
+>
+> A：我最开始也是这么考虑的，但是 godot-wry 的页面自动注入机制是 WebView 实例级配置，无法满足按页面按照依赖关系依次注入指定的几个脚本的需求。而直接 eval 又比较难以调试和扩展，所以我干脆把注入逻辑也做到了 js 脚本里，这样以后有大佬有更好方案的话，他们还可以直接在 mod 里覆盖这个脚本，以此提供更好的体验。退一步说，这每页加载时的额外一次交互应该性能影响可控
+
 # Mod 作者自由度边界
 
 舒适区：
@@ -224,13 +328,15 @@ Godot 和 Python `mod_manager` 彼此只通过 IPC 交流，而 Godot 不感知 
 - 改变游戏核心循环
 - 新增非网页 UI
 
-不过我也有在**规划**使用 [`ProjectSettings.load_resource_pack()`](https://docs.godotengine.org/en/stable/tutorials/export/exporting_pcks.html) 的机制来提供给 Mod 作者添加游戏内非网页 UI 的能力。不过在 demo 流行或者暴死前我还没有做这个的计划。
+不过我也有在规划使用 [`ProjectSettings.load_resource_pack()`](https://docs.godotengine.org/en/stable/tutorials/export/exporting_pcks.html) 的机制来提供给 Mod 作者添加游戏内非网页 UI 的能力。不过在 demo 流行或者暴死前我暂时还没有做这个的计划。
 
 # 手把手：写一个完整的小 Mod
 
 下面示例创建 `EchoTrace`，它提供一个网页、一个任务、一个后端验证 route、一个故事事件，以及可选的奖励反馈。
 
 ## 1. 创建元数据
+
+这部分用于声明一个 mod 的摘要信息、依赖关系等等
 
 ```text
 Mods/EchoTrace/
@@ -288,6 +394,8 @@ def proxyos_register():
 
 ## 2. 创建组织和域名
 
+`Organizations`主要承担跨网页的数据，比如一个组织发行的代币数据之类的。目前在这个 Mod 里没啥作用，但以后游戏内可能会提供根据`Organizations`整理网页等数据的功能，所以目前还是得加个配置来指定每个域名的组织归属。
+
 ```text
 Mods/EchoTrace/
   Organizations/EchoLab/org.toml
@@ -308,9 +416,13 @@ org = "EchoLab"
 
 ## 3. 添加网页
 
-```text
-Domains/echo.trace.local/frontend/pages/index.html
-```
+这就是玩家可以在游戏里看到的页面，玩家可以使用`proxy://echo.trace.local/frontend/pages/`这样的 url 访问`Domains/echo.trace.local/frontend/pages/index.html`，
+
+其中可以使用相对路径引用`./js/foobar.js`之类的脚本或样式，但这里没用到
+
+需要注意这里当玩家点击`<button id="issue">接收任务</button>`时，就会调用后端的`proxy://echo.trace.local/api/trace/issue`接口，这个接口的实现我们后面会提
+
+`Domains/echo.trace.local/frontend/pages/index.html`
 
 ```html
 <!doctype html>
@@ -336,16 +448,13 @@ Domains/echo.trace.local/frontend/pages/index.html
 </html>
 ```
 
-游戏里访问 `proxy://echo.trace.local/index.html` 时，Spider 会把它解析到这个文件。
-
 ## 4. 添加任务
 
-```text
-Domains/echo.trace.local/backend/task/first_trace/task.json
-Domains/echo.trace.local/backend/task/first_trace/req_submit.json
-```
+这是玩家的任务系统可以显示的任务。当`dependency_tasks`里的任务都被完成时，这个任务就可以被发放了。任务的发放需要由网页、剧本系统等其他模块触发，这样就不是”玩家完成任务后，第二天一醒发现冒出了野生的新任务“，而是”玩家完成任务后，阅读了某些网页、聊天信息，触发了新任务“
 
-`task.json`：
+需要注意这里当玩家将文件拖入“提交记录码”时，就会调用后端的`proxy://echo.trace.local/api/trace/validate`接口，这个接口的实现我们后面会提
+
+`Domains/echo.trace.local/backend/task/first_trace/task.json`：
 
 ```json
 {
@@ -370,7 +479,7 @@ Domains/echo.trace.local/backend/task/first_trace/req_submit.json
 }
 ```
 
-`req_submit.json`：
+`Domains/echo.trace.local/backend/task/first_trace/req_submit.json`：
 
 ```json
 {
@@ -384,9 +493,13 @@ Domains/echo.trace.local/backend/task/first_trace/req_submit.json
 
 ## 5. 添加后端 route
 
-```text
-Domains/echo.trace.local/backend/task/task_handler.py
-```
+这里就是之前说过会提的两个接口的后端实现了，如下是标准实现模式，但也可以使用更自由的方式
+
+比如玩家点击页面按钮时调用的`proxy://echo.trace.local/api/trace/issue` ，除了发放任务也可以做一些诸如“给玩家解锁新道具”、“启动一个定时发送消息的定时器”、“解锁任务相关文件”等等操作
+
+又比如玩家提交文件时调用的`proxy://echo.trace.local/api/trace/validate`，除了这个典型的使用`req_submit`来定义验证配置，并使用内置的`validate_remote_request`来结合验证条件进行验证外，也可以自行定义自己的验证器和验证配置，来实现更复杂的验证
+
+`Domains/echo.trace.local/backend/task/task_handler.py`
 
 ```python
 from proxy_os_ipc.cpg.server.route import Request, route
@@ -416,9 +529,15 @@ async def validate_trace_submission(request: Request) -> dict:
 
 ## 6. 可选：添加 story YAML
 
-```text
-Domains/echo.trace.local/backend/story/first_trace.yaml
-```
+除了使用网页触发任务、使用任务的 validate 接口 handler 调 sdk 实现任务完成后效之外，也可以使用剧本系统
+
+如下就是一个“进入 FORMAL 章节时发放任务，并在任务完成后设置标记”的最小示例
+
+> 阶段数字来自 `GameStage.Stage`：`INTRO=-1`、`PROLOGUE=0`、`RECOVERY=1`、`FORMAL=2`。当前 YAML 编译器要求 `stage_entered` 写数字。
+
+不过在真正写剧本系统的时候，强烈建议不要用`stage_entered`，因为-1、0、1 三个 Stage 基本是教程阶段，Stage 2 就是整个游戏的内容，所以一般只有 Core（游戏自身内容）会将 Stage 作为触发条件。这也是为什么我没有对其提供枚举别名——它本就不该被常规 mod 使用
+
+`Domains/echo.trace.local/backend/story/first_trace.yaml`
 
 ```yaml
 meta:
@@ -444,17 +563,13 @@ events:
 
 ## 7. 可选：添加信息段或桌宠反馈
 
-信息段：
+信息段其实是早期开发时仿 Owell 的机制，但后来随着项目的定位越来越明确（让玩家在玩中学编程思想），重心也从信息段转移到了`RemoteRequestRequirement`等可以进行复杂验证的模式，只有在添加网页浏览解谜类的任务是才会用到这个了
 
-```text
-Domains/echo.trace.local/backend/task/first_trace/archive/trace_note.json
-```
+而桌宠对话池并非必要内容，而且目前设计可能还不稳定（比如使用内部编辑器展示示例调试代码的功能还没想好要不要迁移为 mod 实现），所以暂时不推荐 mod 添加
 
-桌宠对话池：
+信息段：`Domains/echo.trace.local/backend/task/first_trace/archive/trace_note.json`
 
-```text
-Domains/echo.trace.local/backend/task/first_trace/desktop_pet/trace_hint.json
-```
+桌宠对话池：`Domains/echo.trace.local/backend/task/first_trace/desktop_pet/trace_hint.json`
 
 这些 JSON 的字段应参考对应 SDK/Godot Resource 字段；如果 `Mods/Core` 中没有同类示例，就回到扫描器和 Resource 定义核对。不要为它们创建新的加载入口。
 
