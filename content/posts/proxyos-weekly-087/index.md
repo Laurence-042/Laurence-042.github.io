@@ -1,8 +1,8 @@
 +++
-date = '2026-08-17T12:56:00+08:00'
+date = '2026-08-20T10:54:00+08:00'
 draft = false
-title = 'Proxyos Weekly 086'
-slug = 'proxyos-weekly-086'
+title = 'Proxyos Weekly 087'
+slug = 'proxyos-weekly-087'
 series = ['proxyos-weekly']
 categories = ['ProxyOS', 'DevLog']
 tags = ['ProxyOS', '周报', '独立游戏开发', '技术日志']
