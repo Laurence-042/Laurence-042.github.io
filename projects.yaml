@@ -148,6 +148,25 @@ projects:
     features:
       - "玩具"
 
+  KP-Explain-This:
+    name: "KP，编啊 — 关键词即兴叙事"
+    description: "从 TXT/PDF 书页掷骰抽取关键词，由玩家与 LLM 主持人共同推进的即兴叙事游戏"
+    repository: "Laurence-042/KP-Explain-This"
+    demo_path: "/project/KP-Explain-This/demo/"
+    build_command: "build"
+    build_dir: "dist"
+    main_file: "index.html"
+    tech_stack:
+      - "Vue 3"
+      - "TypeScript"
+      - "Vite"
+      - "PDF.js"
+    features:
+      - "TXT/PDF 导入"
+      - "随机关键词叙事"
+      - "LLM 主持人与玩家"
+      - "本地存档"
+
   # 未来可以添加更多项目
   # another-project:
   #   name: "另一个项目"
