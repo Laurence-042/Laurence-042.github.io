@@ -67,8 +67,9 @@ for project_id in project_ids:
     )
 
     github_url = f"https://github.com/{repo}" if repo else ""
-    demo_url   = f"/project/{project_id}/demo/"
-    page_url   = f"/project/{project_id}/"
+    project_slug = project_id.lower()
+    demo_url   = f"/project/{project_slug}/demo/"
+    page_url   = f"/project/{project_slug}/"
 
     card = f"""\
 <div class="w-50-l w-100 ph3 mb4">

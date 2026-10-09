@@ -290,9 +290,10 @@ jobs:
       - name: 准备Demo文件
         run: |
           echo "=== 准备Demo文件 ${{ matrix.project }} ==="
-          mkdir -p demo-output/project/${{ matrix.project }}/demo
           PROJECT_DIR="projects/${{ matrix.project }}"
-          DEMO_DIR="demo-output/project/${{ matrix.project }}/demo"
+          PROJECT_SLUG=$(printf '%s' '${{ matrix.project }}' | tr '[:upper:]' '[:lower:]')
+          DEMO_DIR="demo-output/project/$PROJECT_SLUG/demo"
+          mkdir -p "$DEMO_DIR"
           
           # 复制构建后的文件（按优先级查找 dist > build > public）
           BUILD_DIR=""
@@ -372,7 +373,7 @@ jobs:
               echo ""
               echo "- **源码仓库**: https://github.com/Laurence-042/$PROJECT_NAME"
               echo "- **最后更新**: $CURRENT_DATE_READABLE"
-              echo "- **演示地址**: https://Laurence-042.github.io/project/$PROJECT_NAME/demo/"
+              echo "- **演示地址**: https://Laurence-042.github.io/project/$PROJECT_SLUG/demo/"
               echo ""
               echo "## 使用说明"
               echo ""
@@ -490,11 +491,13 @@ jobs:
 
           for project in $PROJECTS_LIST; do
             echo "处理项目: $project"
+            # 仓库检出保留原始大小写，站点介绍页和 Demo 路径统一使用小写。
+            project_slug=$(printf '%s' "$project" | tr '[:upper:]' '[:lower:]')
             
             # README.md 已在 build-projects job 中处理好（带 front matter），直接复制
-            if [ -f "static/project/$project/demo/README.md" ]; then
+            if [ -f "static/project/$project_slug/demo/README.md" ]; then
               echo "✓ 复制项目的README.md作为内容页面"
-              cp "static/project/$project/demo/README.md" "content/project/$project.md"
+              cp "static/project/$project_slug/demo/README.md" "content/project/$project_slug.md"
             else
               echo "⚠️ 未找到README.md，这不应该发生"
             fi

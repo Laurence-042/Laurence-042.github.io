@@ -152,7 +152,7 @@ projects:
     name: "KP，编啊 — 关键词即兴叙事"
     description: "从 TXT/PDF 书页掷骰抽取关键词，由玩家与 LLM 主持人共同推进的即兴叙事游戏"
     repository: "Laurence-042/KP-Explain-This"
-    demo_path: "/project/KP-Explain-This/demo/"
+    demo_path: "/project/kp-explain-this/demo/"
     build_command: "build"
     build_dir: "dist"
     main_file: "index.html"
