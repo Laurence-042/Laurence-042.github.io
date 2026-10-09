@@ -68,8 +68,7 @@ for project_id in project_ids:
 
     github_url = f"https://github.com/{repo}" if repo else ""
     demo_url   = f"/project/{project_id}/demo/"
-    # Hugo lowercases generated content page paths; static demo paths keep the repository case.
-    page_url   = f"/project/{project_id.lower()}/"
+    page_url   = f"/project/{project_id}/"
 
     card = f"""\
 <div class="w-50-l w-100 ph3 mb4">
