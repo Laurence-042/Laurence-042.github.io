@@ -167,6 +167,24 @@ projects:
       - "LLM 主持人与玩家"
       - "本地存档"
 
+  ForcePhone-Test:
+    name: "ForcePhone Lab · 声学压力实验"
+    description: "用手机扬声器与麦克风探索结构传声压力感知原理的浏览器实验"
+    repository: "Laurence-042/ForcePhone-Test"
+    demo_path: "/project/forcephone-test/demo/"
+    build_command: "build"
+    build_dir: "dist"
+    main_file: "index.html"
+    tech_stack:
+      - "Vue 3"
+      - "JavaScript"
+      - "Vite"
+      - "Web Audio API"
+    features:
+      - "超声波扫频"
+      - "麦克风匹配滤波"
+      - "空载基线校准"
+
   # 未来可以添加更多项目
   # another-project:
   #   name: "另一个项目"
